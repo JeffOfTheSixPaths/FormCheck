@@ -260,6 +260,21 @@ class DatabaseManager:
             logger.error("Error fetching user %d: %s", user_id, e)
             return None
 
+    def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
+        """Retrieves a user profile by username."""
+        try:
+            with self.connection_scope() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT id, username, email, full_name, created_at, last_login_at FROM users WHERE username = ? COLLATE NOCASE",
+                    (username.strip(),),
+                )
+                row = cursor.fetchone()
+                return dict(row) if row else None
+        except Exception as e:
+            logger.error("Error fetching user %s: %s", username, e)
+            return None
+
     # --------------------------------------------------------------------------
     # Workout Sessions Logging
     # --------------------------------------------------------------------------
@@ -373,6 +388,123 @@ class DatabaseManager:
             "grand_total_reps": 0,
             "overall_avg_score": 0.0,
         }
+
+    # --------------------------------------------------------------------------
+    # Uploaded Video Management (Pro Athlete & Personal Library)
+    # --------------------------------------------------------------------------
+
+    def add_uploaded_video(
+        self,
+        title: str,
+        category: str,
+        file_path: str,
+        sport: str = "General",
+        user_id: Optional[int] = None,
+        thumbnail_path: Optional[str] = None,
+        fps: float = 30.0,
+        total_frames: int = 0,
+        duration_seconds: float = 0.0,
+        resolution: str = "1920x1080",
+        description: Optional[str] = None,
+    ) -> Optional[int]:
+        """Inserts an uploaded video record into the database."""
+        try:
+            with self.connection_scope() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    INSERT INTO uploaded_videos (
+                        user_id, title, category, sport, file_path, thumbnail_path,
+                        fps, total_frames, duration_seconds, resolution, description
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        user_id,
+                        title.strip(),
+                        category.strip().lower(),
+                        sport.strip(),
+                        file_path,
+                        thumbnail_path,
+                        float(fps),
+                        int(total_frames),
+                        float(duration_seconds),
+                        resolution,
+                        description,
+                    ),
+                )
+                return cursor.lastrowid
+        except Exception as e:
+            logger.error("Failed to add uploaded video '%s': %s", title, e)
+            return None
+
+    def get_uploaded_videos(
+        self,
+        category: Optional[str] = None,
+        user_id: Optional[int] = None,
+        sport: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Retrieves videos filtered by category and user ownership."""
+        try:
+            with self.connection_scope() as conn:
+                cursor = conn.cursor()
+                query = "SELECT * FROM uploaded_videos WHERE 1=1"
+                params: List[Any] = []
+
+                if category == "pro":
+                    query += " AND (category = 'pro' OR category = 'both')"
+                elif category == "personal":
+                    query += " AND (category = 'personal' OR category = 'both')"
+                    if user_id is not None:
+                        query += " AND user_id = ?"
+                        params.append(user_id)
+                    else:
+                        query += " AND 1=0"
+                else:
+                    if user_id is not None:
+                        query += " AND (category = 'pro' OR user_id = ?)"
+                        params.append(user_id)
+                    else:
+                        query += " AND (category = 'pro' OR category = 'both')"
+
+                if sport and sport != "All Sports":
+                    query += " AND sport = ?"
+                    params.append(sport)
+
+                query += " ORDER BY id DESC"
+                cursor.execute(query, tuple(params))
+                rows = cursor.fetchall()
+                return [dict(r) for r in rows]
+        except Exception as e:
+            logger.error("Failed to fetch uploaded videos: %s", e)
+            return []
+
+    def get_video_by_id(self, video_id: int) -> Optional[Dict[str, Any]]:
+        try:
+            with self.connection_scope() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM uploaded_videos WHERE id = ?", (video_id,))
+                row = cursor.fetchone()
+                return dict(row) if row else None
+        except Exception as e:
+            logger.error("Failed to get video by ID %d: %s", video_id, e)
+            return None
+
+    def delete_uploaded_video(self, video_id: int, user_id: Optional[int] = None) -> bool:
+        """Deletes a video record. If user_id provided, ensures user owns the video."""
+        try:
+            with self.connection_scope() as conn:
+                cursor = conn.cursor()
+                if user_id is not None:
+                    cursor.execute(
+                        "DELETE FROM uploaded_videos WHERE id = ? AND user_id = ?",
+                        (video_id, user_id),
+                    )
+                else:
+                    cursor.execute("DELETE FROM uploaded_videos WHERE id = ?", (video_id,))
+                return cursor.rowcount > 0
+        except Exception as e:
+            logger.error("Failed to delete video %d: %s", video_id, e)
+            return False
 
 
 # Singleton database instance

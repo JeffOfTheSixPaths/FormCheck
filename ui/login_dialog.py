@@ -35,9 +35,9 @@ class LoginDialog(QDialog):
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle(f"{APP_NAME} - Sign In")
-        self.resize(520, 680)
-        self.setMinimumSize(480, 620)
+        self.setWindowTitle(f"{APP_NAME} Pro - Athlete Sign In")
+        self.resize(560, 740)
+        self.setMinimumSize(520, 700)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
 
         self.authenticated_user: Optional[Dict[str, Any]] = None
@@ -47,26 +47,26 @@ class LoginDialog(QDialog):
 
     def _init_ui(self) -> None:
         root_layout = QVBoxLayout(self)
-        root_layout.setContentsMargins(32, 28, 32, 28)
-        root_layout.setSpacing(16)
+        root_layout.setContentsMargins(36, 30, 36, 30)
+        root_layout.setSpacing(18)
 
         # 1. Branding Header
         header_layout = QVBoxLayout()
         header_layout.setAlignment(Qt.AlignCenter)
-        header_layout.setSpacing(6)
+        header_layout.setSpacing(8)
 
-        title_label = QLabel(APP_NAME.upper())
+        title_label = QLabel("FORMCHECK PRO")
         title_label.setStyleSheet(
-            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_DISPLAY}; "
-            f"font-size: 26px; font-weight: 800; letter-spacing: 3px;"
+            f"color: {THEME.TEXT_PRIMARY}; font-family: {THEME.FONT_FAMILY_DISPLAY}; "
+            f"font-size: 28px; font-weight: 800; letter-spacing: 3px;"
         )
         title_label.setAlignment(Qt.AlignCenter)
         header_layout.addWidget(title_label)
 
-        subtitle_label = QLabel("REAL-TIME AI FORM ANALYZER & REP TRACKER")
+        subtitle_label = QLabel("PRO ATHLETE BIOMECHANICS & KINEMATICS SYSTEM")
         subtitle_label.setStyleSheet(
-            f"color: {THEME.TEXT_MUTED}; font-family: {THEME.FONT_FAMILY_TECH}; "
-            f"font-size: 11px; font-weight: 600; letter-spacing: 1.5px;"
+            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_TECH}; "
+            f"font-size: 11px; font-weight: 700; letter-spacing: 2px;"
         )
         subtitle_label.setAlignment(Qt.AlignCenter)
         header_layout.addWidget(subtitle_label)
@@ -75,15 +75,16 @@ class LoginDialog(QDialog):
 
         # 2. Tab Widget for Login / Register
         self.tabs = QTabWidget()
-        self.tabs.addTab(self._build_login_tab(), "Sign In")
-        self.tabs.addTab(self._build_register_tab(), "Create Account")
+        self.tabs.addTab(self._build_login_tab(), "ATHLETE SIGN IN")
+        self.tabs.addTab(self._build_register_tab(), "REGISTER ATHLETE")
         root_layout.addWidget(self.tabs)
 
         # 3. Guest Mode / Skip Footer
         footer_layout = QHBoxLayout()
         footer_layout.setAlignment(Qt.AlignCenter)
+        footer_layout.setContentsMargins(0, 8, 0, 4)
 
-        guest_btn = QPushButton("Continue as Guest (No Cloud/SQL Tracking)")
+        guest_btn = QPushButton("Continue as Guest Athlete (Telemetry Only)")
         guest_btn.setObjectName("btn_link")
         guest_btn.setCursor(Qt.PointingHandCursor)
         guest_btn.clicked.connect(self._on_guest_login)
@@ -98,7 +99,7 @@ class LoginDialog(QDialog):
     def _build_login_tab(self) -> QWidget:
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(14)
 
         # Error / Notification Banner
@@ -108,25 +109,25 @@ class LoginDialog(QDialog):
         layout.addWidget(self.login_banner)
 
         # Identifier (Username or Email)
-        id_label = QLabel("Username or Email")
-        id_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600;")
+        id_label = QLabel("Athlete Username or Email")
+        id_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600; font-family: {THEME.FONT_FAMILY_DISPLAY}; font-size: 12px; letter-spacing: 0.8px;")
         layout.addWidget(id_label)
 
         self.login_id_input = QLineEdit()
-        self.login_id_input.setPlaceholderText("Enter your username or email")
-        self.login_id_input.setMinimumHeight(38)
+        self.login_id_input.setPlaceholderText("Enter athlete username or email")
+        self.login_id_input.setMinimumHeight(44)
         self.login_id_input.returnPressed.connect(self._on_submit_login)
         layout.addWidget(self.login_id_input)
 
         # Password
-        pw_label = QLabel("Password")
-        pw_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600;")
+        pw_label = QLabel("Athlete Password")
+        pw_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600; font-family: {THEME.FONT_FAMILY_DISPLAY}; font-size: 12px; letter-spacing: 0.8px;")
         layout.addWidget(pw_label)
 
         self.login_pw_input = QLineEdit()
         self.login_pw_input.setEchoMode(QLineEdit.Password)
         self.login_pw_input.setPlaceholderText("Enter your password")
-        self.login_pw_input.setMinimumHeight(38)
+        self.login_pw_input.setMinimumHeight(44)
         self.login_pw_input.returnPressed.connect(self._on_submit_login)
         layout.addWidget(self.login_pw_input)
 
@@ -146,12 +147,12 @@ class LoginDialog(QDialog):
         options_layout.addWidget(self.login_remember_me)
         layout.addLayout(options_layout)
 
-        layout.addSpacing(8)
+        layout.addSpacing(10)
 
         # Submit Button
-        self.login_submit_btn = QPushButton("Sign In")
+        self.login_submit_btn = QPushButton("SIGN IN")
         self.login_submit_btn.setObjectName("btn_primary")
-        self.login_submit_btn.setMinimumHeight(42)
+        self.login_submit_btn.setMinimumHeight(48)
         self.login_submit_btn.setCursor(Qt.PointingHandCursor)
         self.login_submit_btn.clicked.connect(self._on_submit_login)
         layout.addWidget(self.login_submit_btn)
@@ -169,7 +170,7 @@ class LoginDialog(QDialog):
         widget = QWidget()
         widget.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(widget)
-        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setContentsMargins(24, 20, 24, 20)
         layout.setSpacing(12)
 
         # Error / Notification Banner
@@ -179,64 +180,64 @@ class LoginDialog(QDialog):
         layout.addWidget(self.register_banner)
 
         # Username
-        u_label = QLabel("Username *")
-        u_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600;")
+        u_label = QLabel("Athlete Username *")
+        u_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600; font-family: {THEME.FONT_FAMILY_DISPLAY}; font-size: 12px; letter-spacing: 0.8px;")
         layout.addWidget(u_label)
 
         self.reg_username_input = QLineEdit()
-        self.reg_username_input.setPlaceholderText("e.g. alex_fitness")
-        self.reg_username_input.setMinimumHeight(38)
+        self.reg_username_input.setPlaceholderText("e.g. pro_athlete")
+        self.reg_username_input.setMinimumHeight(44)
         layout.addWidget(self.reg_username_input)
 
         # Email
         e_label = QLabel("Email Address *")
-        e_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600;")
+        e_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600; font-family: {THEME.FONT_FAMILY_DISPLAY}; font-size: 12px; letter-spacing: 0.8px;")
         layout.addWidget(e_label)
 
         self.reg_email_input = QLineEdit()
-        self.reg_email_input.setPlaceholderText("e.g. alex@example.com")
-        self.reg_email_input.setMinimumHeight(38)
+        self.reg_email_input.setPlaceholderText("e.g. athlete@sports.com")
+        self.reg_email_input.setMinimumHeight(44)
         layout.addWidget(self.reg_email_input)
 
         # Full Name (Optional)
         n_label = QLabel("Full Name (Optional)")
-        n_label.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-weight: 500;")
+        n_label.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-weight: 500; font-family: {THEME.FONT_FAMILY_DISPLAY}; font-size: 12px; letter-spacing: 0.8px;")
         layout.addWidget(n_label)
 
         self.reg_name_input = QLineEdit()
-        self.reg_name_input.setPlaceholderText("e.g. Alex Johnson")
-        self.reg_name_input.setMinimumHeight(38)
+        self.reg_name_input.setPlaceholderText("e.g. Jordan Smith")
+        self.reg_name_input.setMinimumHeight(44)
         layout.addWidget(self.reg_name_input)
 
         # Password
         p_label = QLabel("Password (min 6 characters) *")
-        p_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600;")
+        p_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600; font-family: {THEME.FONT_FAMILY_DISPLAY}; font-size: 12px; letter-spacing: 0.8px;")
         layout.addWidget(p_label)
 
         self.reg_pw_input = QLineEdit()
         self.reg_pw_input.setEchoMode(QLineEdit.Password)
         self.reg_pw_input.setPlaceholderText("Create a secure password")
-        self.reg_pw_input.setMinimumHeight(38)
+        self.reg_pw_input.setMinimumHeight(44)
         layout.addWidget(self.reg_pw_input)
 
         # Confirm Password
         cp_label = QLabel("Confirm Password *")
-        cp_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600;")
+        cp_label.setStyleSheet(f"color: {THEME.TEXT_PRIMARY}; font-weight: 600; font-family: {THEME.FONT_FAMILY_DISPLAY}; font-size: 12px; letter-spacing: 0.8px;")
         layout.addWidget(cp_label)
 
         self.reg_cpw_input = QLineEdit()
         self.reg_cpw_input.setEchoMode(QLineEdit.Password)
         self.reg_cpw_input.setPlaceholderText("Re-enter your password")
-        self.reg_cpw_input.setMinimumHeight(38)
+        self.reg_cpw_input.setMinimumHeight(44)
         self.reg_cpw_input.returnPressed.connect(self._on_submit_register)
         layout.addWidget(self.reg_cpw_input)
 
-        layout.addSpacing(6)
+        layout.addSpacing(8)
 
         # Submit Button
-        self.reg_submit_btn = QPushButton("Create Account")
+        self.reg_submit_btn = QPushButton("REGISTER ATHLETE")
         self.reg_submit_btn.setObjectName("btn_primary")
-        self.reg_submit_btn.setMinimumHeight(42)
+        self.reg_submit_btn.setMinimumHeight(48)
         self.reg_submit_btn.setCursor(Qt.PointingHandCursor)
         self.reg_submit_btn.clicked.connect(self._on_submit_register)
         layout.addWidget(self.reg_submit_btn)
