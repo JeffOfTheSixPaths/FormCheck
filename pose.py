@@ -76,7 +76,10 @@ def draw_pose(frame, landmarks):
             )
 
 
-def main():
+import sys
+
+
+def run_camera():
     print("Loading pose model...")
 
     base_options = python.BaseOptions(
@@ -94,7 +97,9 @@ def main():
 
     print("Opening camera...")
 
-    camera = cv2.VideoCapture(1)
+    camera = cv2.VideoCapture(0)
+    if not camera.isOpened():
+        camera = cv2.VideoCapture(1)
 
     if not camera.isOpened():
         print("ERROR: Could not open camera.")
@@ -182,6 +187,14 @@ def main():
 
     camera.release()
     cv2.destroyAllWindows()
+
+
+def main():
+    if "--camera" in sys.argv:
+        run_camera()
+    else:
+        import form_check
+        form_check.main()
 
 
 if __name__ == "__main__":
