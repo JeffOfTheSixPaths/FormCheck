@@ -1,0 +1,3834 @@
+{
+  "metadata": {
+    "video_path": "/home/gohith/Downloads/WIN_20261003_14_31_28_Pro.mp4",
+    "total_frames": 108,
+    "analyzed_frames": 107,
+    "fps": 25.65401912966365,
+    "resolution": "1920x1080",
+    "duration_s": 4.209866666666667,
+    "initial_target_bbox": [
+      449,
+      169,
+      388,
+      911
+    ]
+  },
+  "summary_statistics": {
+    "left_hip": {
+      "name": "Left Hip (Torso & Femur)",
+      "sample_count": 36,
+      "expected_value_deg": 166.722,
+      "variance_deg2": 52.675,
+      "std_dev_deg": 7.258,
+      "min_angle_deg": 151.217,
+      "max_angle_deg": 176.466,
+      "range_of_motion_deg": 25.25,
+      "median_deg": 169.661,
+      "q25_deg": 158.803,
+      "q75_deg": 172.645
+    },
+    "right_hip": {
+      "name": "Right Hip (Torso & Femur)",
+      "sample_count": 107,
+      "expected_value_deg": 163.053,
+      "variance_deg2": 146.119,
+      "std_dev_deg": 12.088,
+      "min_angle_deg": 117.35,
+      "max_angle_deg": 177.648,
+      "range_of_motion_deg": 60.298,
+      "median_deg": 167.157,
+      "q25_deg": 164.518,
+      "q75_deg": 169.309
+    },
+    "left_pelvis_femur": {
+      "name": "Left Pelvis-Femur (Abduction)",
+      "sample_count": 36,
+      "expected_value_deg": 84.807,
+      "variance_deg2": 20.835,
+      "std_dev_deg": 4.565,
+      "min_angle_deg": 80.288,
+      "max_angle_deg": 102.221,
+      "range_of_motion_deg": 21.933,
+      "median_deg": 82.973,
+      "q25_deg": 81.682,
+      "q75_deg": 85.325
+    },
+    "right_pelvis_femur": {
+      "name": "Right Pelvis-Femur (Abduction)",
+      "sample_count": 107,
+      "expected_value_deg": 86.877,
+      "variance_deg2": 41.316,
+      "std_dev_deg": 6.428,
+      "min_angle_deg": 75.732,
+      "max_angle_deg": 99.592,
+      "range_of_motion_deg": 23.86,
+      "median_deg": 86.469,
+      "q25_deg": 81.356,
+      "q75_deg": 92.553
+    },
+    "left_elbow": {
+      "name": "Left Elbow (Arm & Forearm)",
+      "sample_count": 64,
+      "expected_value_deg": 89.064,
+      "variance_deg2": 1075.496,
+      "std_dev_deg": 32.795,
+      "min_angle_deg": 51.376,
+      "max_angle_deg": 160.426,
+      "range_of_motion_deg": 109.05,
+      "median_deg": 75.099,
+      "q25_deg": 69.797,
+      "q75_deg": 82.097
+    },
+    "right_elbow": {
+      "name": "Right Elbow (Arm & Forearm)",
+      "sample_count": 107,
+      "expected_value_deg": 94.1,
+      "variance_deg2": 1057.808,
+      "std_dev_deg": 32.524,
+      "min_angle_deg": 41.25,
+      "max_angle_deg": 165.383,
+      "range_of_motion_deg": 124.133,
+      "median_deg": 89.456,
+      "q25_deg": 63.461,
+      "q75_deg": 119.478
+    },
+    "left_shoulder": {
+      "name": "Left Shoulder (Torso & Arm)",
+      "sample_count": 64,
+      "expected_value_deg": 20.28,
+      "variance_deg2": 986.356,
+      "std_dev_deg": 31.406,
+      "min_angle_deg": 1.094,
+      "max_angle_deg": 139.764,
+      "range_of_motion_deg": 138.671,
+      "median_deg": 7.569,
+      "q25_deg": 5.258,
+      "q75_deg": 19.953
+    },
+    "right_shoulder": {
+      "name": "Right Shoulder (Torso & Arm)",
+      "sample_count": 107,
+      "expected_value_deg": 53.979,
+      "variance_deg2": 2126.789,
+      "std_dev_deg": 46.117,
+      "min_angle_deg": 8.701,
+      "max_angle_deg": 147.186,
+      "range_of_motion_deg": 138.484,
+      "median_deg": 29.447,
+      "q25_deg": 21.592,
+      "q75_deg": 91.585
+    },
+    "trunk_inclination": {
+      "name": "Trunk Inclination (Torso Lean)",
+      "sample_count": 107,
+      "expected_value_deg": 5.88,
+      "variance_deg2": 19.108,
+      "std_dev_deg": 4.371,
+      "min_angle_deg": 0.213,
+      "max_angle_deg": 18.947,
+      "range_of_motion_deg": 18.735,
+      "median_deg": 4.94,
+      "q25_deg": 2.881,
+      "q75_deg": 7.688
+    }
+  },
+  "time_series": {
+    "left_knee": [],
+    "right_knee": [],
+    "left_hip": [
+      {
+        "frame": 13,
+        "timestamp_s": 0.5067,
+        "angle_deg": 170.54
+      },
+      {
+        "frame": 14,
+        "timestamp_s": 0.5457,
+        "angle_deg": 169.53
+      },
+      {
+        "frame": 15,
+        "timestamp_s": 0.5847,
+        "angle_deg": 169.79
+      },
+      {
+        "frame": 16,
+        "timestamp_s": 0.6237,
+        "angle_deg": 170.8
+      },
+      {
+        "frame": 17,
+        "timestamp_s": 0.6627,
+        "angle_deg": 171.19
+      },
+      {
+        "frame": 18,
+        "timestamp_s": 0.7016,
+        "angle_deg": 171.87
+      },
+      {
+        "frame": 19,
+        "timestamp_s": 0.7406,
+        "angle_deg": 172.38
+      },
+      {
+        "frame": 20,
+        "timestamp_s": 0.7796,
+        "angle_deg": 172.77
+      },
+      {
+        "frame": 21,
+        "timestamp_s": 0.8186,
+        "angle_deg": 171.6
+      },
+      {
+        "frame": 22,
+        "timestamp_s": 0.8576,
+        "angle_deg": 172.57
+      },
+      {
+        "frame": 23,
+        "timestamp_s": 0.8965,
+        "angle_deg": 172.79
+      },
+      {
+        "frame": 24,
+        "timestamp_s": 0.9355,
+        "angle_deg": 173.16
+      },
+      {
+        "frame": 25,
+        "timestamp_s": 0.9745,
+        "angle_deg": 173.14
+      },
+      {
+        "frame": 26,
+        "timestamp_s": 1.0135,
+        "angle_deg": 173.87
+      },
+      {
+        "frame": 27,
+        "timestamp_s": 1.0525,
+        "angle_deg": 175.69
+      },
+      {
+        "frame": 28,
+        "timestamp_s": 1.0914,
+        "angle_deg": 175.38
+      },
+      {
+        "frame": 29,
+        "timestamp_s": 1.1304,
+        "angle_deg": 176.4
+      },
+      {
+        "frame": 30,
+        "timestamp_s": 1.1694,
+        "angle_deg": 176.47
+      },
+      {
+        "frame": 31,
+        "timestamp_s": 1.2084,
+        "angle_deg": 172.6
+      },
+      {
+        "frame": 32,
+        "timestamp_s": 1.2474,
+        "angle_deg": 169.16
+      },
+      {
+        "frame": 33,
+        "timestamp_s": 1.2863,
+        "angle_deg": 168.15
+      },
+      {
+        "frame": 34,
+        "timestamp_s": 1.3253,
+        "angle_deg": 168.1
+      },
+      {
+        "frame": 35,
+        "timestamp_s": 1.3643,
+        "angle_deg": 160.72
+      },
+      {
+        "frame": 94,
+        "timestamp_s": 3.6641,
+        "angle_deg": 161.5
+      },
+      {
+        "frame": 95,
+        "timestamp_s": 3.7031,
+        "angle_deg": 158.32
+      },
+      {
+        "frame": 96,
+        "timestamp_s": 3.7421,
+        "angle_deg": 151.22
+      },
+      {
+        "frame": 97,
+        "timestamp_s": 3.7811,
+        "angle_deg": 158.89
+      },
+      {
+        "frame": 98,
+        "timestamp_s": 3.8201,
+        "angle_deg": 157.7
+      },
+      {
+        "frame": 99,
+        "timestamp_s": 3.859,
+        "angle_deg": 159.67
+      },
+      {
+        "frame": 100,
+        "timestamp_s": 3.898,
+        "angle_deg": 156.25
+      },
+      {
+        "frame": 101,
+        "timestamp_s": 3.937,
+        "angle_deg": 156.41
+      },
+      {
+        "frame": 102,
+        "timestamp_s": 3.976,
+        "angle_deg": 157.4
+      },
+      {
+        "frame": 103,
+        "timestamp_s": 4.015,
+        "angle_deg": 157.68
+      },
+      {
+        "frame": 104,
+        "timestamp_s": 4.0539,
+        "angle_deg": 158.5
+      },
+      {
+        "frame": 105,
+        "timestamp_s": 4.0929,
+        "angle_deg": 158.54
+      },
+      {
+        "frame": 106,
+        "timestamp_s": 4.1319,
+        "angle_deg": 161.28
+      }
+    ],
+    "right_hip": [
+      {
+        "frame": 0,
+        "timestamp_s": 0.0,
+        "angle_deg": 170.28
+      },
+      {
+        "frame": 1,
+        "timestamp_s": 0.039,
+        "angle_deg": 165.78
+      },
+      {
+        "frame": 2,
+        "timestamp_s": 0.078,
+        "angle_deg": 166.44
+      },
+      {
+        "frame": 3,
+        "timestamp_s": 0.1169,
+        "angle_deg": 164.51
+      },
+      {
+        "frame": 4,
+        "timestamp_s": 0.1559,
+        "angle_deg": 166.13
+      },
+      {
+        "frame": 5,
+        "timestamp_s": 0.1949,
+        "angle_deg": 166.25
+      },
+      {
+        "frame": 6,
+        "timestamp_s": 0.2339,
+        "angle_deg": 166.97
+      },
+      {
+        "frame": 7,
+        "timestamp_s": 0.2729,
+        "angle_deg": 167.34
+      },
+      {
+        "frame": 8,
+        "timestamp_s": 0.3118,
+        "angle_deg": 166.27
+      },
+      {
+        "frame": 9,
+        "timestamp_s": 0.3508,
+        "angle_deg": 166.75
+      },
+      {
+        "frame": 10,
+        "timestamp_s": 0.3898,
+        "angle_deg": 166.74
+      },
+      {
+        "frame": 11,
+        "timestamp_s": 0.4288,
+        "angle_deg": 167.16
+      },
+      {
+        "frame": 12,
+        "timestamp_s": 0.4678,
+        "angle_deg": 167.01
+      },
+      {
+        "frame": 13,
+        "timestamp_s": 0.5067,
+        "angle_deg": 167.27
+      },
+      {
+        "frame": 14,
+        "timestamp_s": 0.5457,
+        "angle_deg": 168.19
+      },
+      {
+        "frame": 15,
+        "timestamp_s": 0.5847,
+        "angle_deg": 167.68
+      },
+      {
+        "frame": 16,
+        "timestamp_s": 0.6237,
+        "angle_deg": 167.54
+      },
+      {
+        "frame": 17,
+        "timestamp_s": 0.6627,
+        "angle_deg": 167.51
+      },
+      {
+        "frame": 18,
+        "timestamp_s": 0.7016,
+        "angle_deg": 166.54
+      },
+      {
+        "frame": 19,
+        "timestamp_s": 0.7406,
+        "angle_deg": 166.77
+      },
+      {
+        "frame": 20,
+        "timestamp_s": 0.7796,
+        "angle_deg": 165.94
+      },
+      {
+        "frame": 21,
+        "timestamp_s": 0.8186,
+        "angle_deg": 166.27
+      },
+      {
+        "frame": 22,
+        "timestamp_s": 0.8576,
+        "angle_deg": 166.68
+      },
+      {
+        "frame": 23,
+        "timestamp_s": 0.8965,
+        "angle_deg": 166.26
+      },
+      {
+        "frame": 24,
+        "timestamp_s": 0.9355,
+        "angle_deg": 165.77
+      },
+      {
+        "frame": 25,
+        "timestamp_s": 0.9745,
+        "angle_deg": 166.41
+      },
+      {
+        "frame": 26,
+        "timestamp_s": 1.0135,
+        "angle_deg": 167.76
+      },
+      {
+        "frame": 27,
+        "timestamp_s": 1.0525,
+        "angle_deg": 169.47
+      },
+      {
+        "frame": 28,
+        "timestamp_s": 1.0914,
+        "angle_deg": 170.64
+      },
+      {
+        "frame": 29,
+        "timestamp_s": 1.1304,
+        "angle_deg": 173.53
+      },
+      {
+        "frame": 30,
+        "timestamp_s": 1.1694,
+        "angle_deg": 174.89
+      },
+      {
+        "frame": 31,
+        "timestamp_s": 1.2084,
+        "angle_deg": 174.35
+      },
+      {
+        "frame": 32,
+        "timestamp_s": 1.2474,
+        "angle_deg": 174.91
+      },
+      {
+        "frame": 33,
+        "timestamp_s": 1.2863,
+        "angle_deg": 174.59
+      },
+      {
+        "frame": 34,
+        "timestamp_s": 1.3253,
+        "angle_deg": 177.65
+      },
+      {
+        "frame": 35,
+        "timestamp_s": 1.3643,
+        "angle_deg": 176.38
+      },
+      {
+        "frame": 36,
+        "timestamp_s": 1.4033,
+        "angle_deg": 171.58
+      },
+      {
+        "frame": 37,
+        "timestamp_s": 1.4423,
+        "angle_deg": 168.32
+      },
+      {
+        "frame": 38,
+        "timestamp_s": 1.4812,
+        "angle_deg": 161.05
+      },
+      {
+        "frame": 39,
+        "timestamp_s": 1.5202,
+        "angle_deg": 143.05
+      },
+      {
+        "frame": 40,
+        "timestamp_s": 1.5592,
+        "angle_deg": 137.2
+      },
+      {
+        "frame": 41,
+        "timestamp_s": 1.5982,
+        "angle_deg": 129.83
+      },
+      {
+        "frame": 42,
+        "timestamp_s": 1.6372,
+        "angle_deg": 120.54
+      },
+      {
+        "frame": 43,
+        "timestamp_s": 1.6762,
+        "angle_deg": 117.35
+      },
+      {
+        "frame": 44,
+        "timestamp_s": 1.7151,
+        "angle_deg": 123.63
+      },
+      {
+        "frame": 45,
+        "timestamp_s": 1.7541,
+        "angle_deg": 128.77
+      },
+      {
+        "frame": 46,
+        "timestamp_s": 1.7931,
+        "angle_deg": 133.94
+      },
+      {
+        "frame": 47,
+        "timestamp_s": 1.8321,
+        "angle_deg": 145.21
+      },
+      {
+        "frame": 48,
+        "timestamp_s": 1.8711,
+        "angle_deg": 148.41
+      },
+      {
+        "frame": 49,
+        "timestamp_s": 1.91,
+        "angle_deg": 144.67
+      },
+      {
+        "frame": 50,
+        "timestamp_s": 1.949,
+        "angle_deg": 139.65
+      },
+      {
+        "frame": 51,
+        "timestamp_s": 1.988,
+        "angle_deg": 141.84
+      },
+      {
+        "frame": 52,
+        "timestamp_s": 2.027,
+        "angle_deg": 147.73
+      },
+      {
+        "frame": 53,
+        "timestamp_s": 2.066,
+        "angle_deg": 145.4
+      },
+      {
+        "frame": 54,
+        "timestamp_s": 2.1049,
+        "angle_deg": 146.54
+      },
+      {
+        "frame": 55,
+        "timestamp_s": 2.1439,
+        "angle_deg": 147.88
+      },
+      {
+        "frame": 56,
+        "timestamp_s": 2.1829,
+        "angle_deg": 155.25
+      },
+      {
+        "frame": 57,
+        "timestamp_s": 2.2219,
+        "angle_deg": 160.45
+      },
+      {
+        "frame": 58,
+        "timestamp_s": 2.2609,
+        "angle_deg": 164.19
+      },
+      {
+        "frame": 59,
+        "timestamp_s": 2.2998,
+        "angle_deg": 163.16
+      },
+      {
+        "frame": 60,
+        "timestamp_s": 2.3388,
+        "angle_deg": 165.6
+      },
+      {
+        "frame": 61,
+        "timestamp_s": 2.3778,
+        "angle_deg": 167.16
+      },
+      {
+        "frame": 62,
+        "timestamp_s": 2.4168,
+        "angle_deg": 169.77
+      },
+      {
+        "frame": 63,
+        "timestamp_s": 2.4558,
+        "angle_deg": 169.43
+      },
+      {
+        "frame": 64,
+        "timestamp_s": 2.4947,
+        "angle_deg": 169.7
+      },
+      {
+        "frame": 65,
+        "timestamp_s": 2.5337,
+        "angle_deg": 168.54
+      },
+      {
+        "frame": 66,
+        "timestamp_s": 2.5727,
+        "angle_deg": 168.2
+      },
+      {
+        "frame": 67,
+        "timestamp_s": 2.6117,
+        "angle_deg": 168.48
+      },
+      {
+        "frame": 68,
+        "timestamp_s": 2.6507,
+        "angle_deg": 167.73
+      },
+      {
+        "frame": 69,
+        "timestamp_s": 2.6896,
+        "angle_deg": 167.39
+      },
+      {
+        "frame": 70,
+        "timestamp_s": 2.7286,
+        "angle_deg": 169.14
+      },
+      {
+        "frame": 71,
+        "timestamp_s": 2.7676,
+        "angle_deg": 169.23
+      },
+      {
+        "frame": 72,
+        "timestamp_s": 2.8066,
+        "angle_deg": 171.01
+      },
+      {
+        "frame": 73,
+        "timestamp_s": 2.8456,
+        "angle_deg": 169.69
+      },
+      {
+        "frame": 74,
+        "timestamp_s": 2.8845,
+        "angle_deg": 169.92
+      },
+      {
+        "frame": 75,
+        "timestamp_s": 2.9235,
+        "angle_deg": 170.76
+      },
+      {
+        "frame": 76,
+        "timestamp_s": 2.9625,
+        "angle_deg": 171.91
+      },
+      {
+        "frame": 77,
+        "timestamp_s": 3.0015,
+        "angle_deg": 170.04
+      },
+      {
+        "frame": 78,
+        "timestamp_s": 3.0405,
+        "angle_deg": 169.9
+      },
+      {
+        "frame": 79,
+        "timestamp_s": 3.0794,
+        "angle_deg": 170.77
+      },
+      {
+        "frame": 80,
+        "timestamp_s": 3.1184,
+        "angle_deg": 169.23
+      },
+      {
+        "frame": 81,
+        "timestamp_s": 3.1574,
+        "angle_deg": 169.38
+      },
+      {
+        "frame": 82,
+        "timestamp_s": 3.1964,
+        "angle_deg": 169.41
+      },
+      {
+        "frame": 83,
+        "timestamp_s": 3.2354,
+        "angle_deg": 168.6
+      },
+      {
+        "frame": 84,
+        "timestamp_s": 3.2743,
+        "angle_deg": 166.16
+      },
+      {
+        "frame": 85,
+        "timestamp_s": 3.3133,
+        "angle_deg": 163.89
+      },
+      {
+        "frame": 86,
+        "timestamp_s": 3.3523,
+        "angle_deg": 162.24
+      },
+      {
+        "frame": 87,
+        "timestamp_s": 3.3913,
+        "angle_deg": 162.97
+      },
+      {
+        "frame": 88,
+        "timestamp_s": 3.4303,
+        "angle_deg": 167.85
+      },
+      {
+        "frame": 89,
+        "timestamp_s": 3.4692,
+        "angle_deg": 168.89
+      },
+      {
+        "frame": 90,
+        "timestamp_s": 3.5082,
+        "angle_deg": 168.15
+      },
+      {
+        "frame": 91,
+        "timestamp_s": 3.5472,
+        "angle_deg": 166.04
+      },
+      {
+        "frame": 92,
+        "timestamp_s": 3.5862,
+        "angle_deg": 167.71
+      },
+      {
+        "frame": 93,
+        "timestamp_s": 3.6252,
+        "angle_deg": 168.66
+      },
+      {
+        "frame": 94,
+        "timestamp_s": 3.6641,
+        "angle_deg": 165.95
+      },
+      {
+        "frame": 95,
+        "timestamp_s": 3.7031,
+        "angle_deg": 166.14
+      },
+      {
+        "frame": 96,
+        "timestamp_s": 3.7421,
+        "angle_deg": 162.68
+      },
+      {
+        "frame": 97,
+        "timestamp_s": 3.7811,
+        "angle_deg": 167.51
+      },
+      {
+        "frame": 98,
+        "timestamp_s": 3.8201,
+        "angle_deg": 168.25
+      },
+      {
+        "frame": 99,
+        "timestamp_s": 3.859,
+        "angle_deg": 169.63
+      },
+      {
+        "frame": 100,
+        "timestamp_s": 3.898,
+        "angle_deg": 170.41
+      },
+      {
+        "frame": 101,
+        "timestamp_s": 3.937,
+        "angle_deg": 167.52
+      },
+      {
+        "frame": 102,
+        "timestamp_s": 3.976,
+        "angle_deg": 164.53
+      },
+      {
+        "frame": 103,
+        "timestamp_s": 4.015,
+        "angle_deg": 164.82
+      },
+      {
+        "frame": 104,
+        "timestamp_s": 4.0539,
+        "angle_deg": 165.3
+      },
+      {
+        "frame": 105,
+        "timestamp_s": 4.0929,
+        "angle_deg": 164.53
+      },
+      {
+        "frame": 106,
+        "timestamp_s": 4.1319,
+        "angle_deg": 169.57
+      }
+    ],
+    "left_pelvis_femur": [
+      {
+        "frame": 13,
+        "timestamp_s": 0.5067,
+        "angle_deg": 83.53
+      },
+      {
+        "frame": 14,
+        "timestamp_s": 0.5457,
+        "angle_deg": 84.94
+      },
+      {
+        "frame": 15,
+        "timestamp_s": 0.5847,
+        "angle_deg": 84.38
+      },
+      {
+        "frame": 16,
+        "timestamp_s": 0.6237,
+        "angle_deg": 83.34
+      },
+      {
+        "frame": 17,
+        "timestamp_s": 0.6627,
+        "angle_deg": 83.71
+      },
+      {
+        "frame": 18,
+        "timestamp_s": 0.7016,
+        "angle_deg": 81.91
+      },
+      {
+        "frame": 19,
+        "timestamp_s": 0.7406,
+        "angle_deg": 82.57
+      },
+      {
+        "frame": 20,
+        "timestamp_s": 0.7796,
+        "angle_deg": 81.51
+      },
+      {
+        "frame": 21,
+        "timestamp_s": 0.8186,
+        "angle_deg": 82.49
+      },
+      {
+        "frame": 22,
+        "timestamp_s": 0.8576,
+        "angle_deg": 82.72
+      },
+      {
+        "frame": 23,
+        "timestamp_s": 0.8965,
+        "angle_deg": 81.66
+      },
+      {
+        "frame": 24,
+        "timestamp_s": 0.9355,
+        "angle_deg": 81.21
+      },
+      {
+        "frame": 25,
+        "timestamp_s": 0.9745,
+        "angle_deg": 81.33
+      },
+      {
+        "frame": 26,
+        "timestamp_s": 1.0135,
+        "angle_deg": 81.67
+      },
+      {
+        "frame": 27,
+        "timestamp_s": 1.0525,
+        "angle_deg": 82.28
+      },
+      {
+        "frame": 28,
+        "timestamp_s": 1.0914,
+        "angle_deg": 81.69
+      },
+      {
+        "frame": 29,
+        "timestamp_s": 1.1304,
+        "angle_deg": 84.1
+      },
+      {
+        "frame": 30,
+        "timestamp_s": 1.1694,
+        "angle_deg": 85.24
+      },
+      {
+        "frame": 31,
+        "timestamp_s": 1.2084,
+        "angle_deg": 88.56
+      },
+      {
+        "frame": 32,
+        "timestamp_s": 1.2474,
+        "angle_deg": 91.09
+      },
+      {
+        "frame": 33,
+        "timestamp_s": 1.2863,
+        "angle_deg": 90.48
+      },
+      {
+        "frame": 34,
+        "timestamp_s": 1.3253,
+        "angle_deg": 91.0
+      },
+      {
+        "frame": 35,
+        "timestamp_s": 1.3643,
+        "angle_deg": 102.22
+      },
+      {
+        "frame": 94,
+        "timestamp_s": 3.6641,
+        "angle_deg": 92.94
+      },
+      {
+        "frame": 95,
+        "timestamp_s": 3.7031,
+        "angle_deg": 91.48
+      },
+      {
+        "frame": 96,
+        "timestamp_s": 3.7421,
+        "angle_deg": 90.45
+      },
+      {
+        "frame": 97,
+        "timestamp_s": 3.7811,
+        "angle_deg": 85.57
+      },
+      {
+        "frame": 98,
+        "timestamp_s": 3.8201,
+        "angle_deg": 84.5
+      },
+      {
+        "frame": 99,
+        "timestamp_s": 3.859,
+        "angle_deg": 82.74
+      },
+      {
+        "frame": 100,
+        "timestamp_s": 3.898,
+        "angle_deg": 83.21
+      },
+      {
+        "frame": 101,
+        "timestamp_s": 3.937,
+        "angle_deg": 82.5
+      },
+      {
+        "frame": 102,
+        "timestamp_s": 3.976,
+        "angle_deg": 81.56
+      },
+      {
+        "frame": 103,
+        "timestamp_s": 4.015,
+        "angle_deg": 82.09
+      },
+      {
+        "frame": 104,
+        "timestamp_s": 4.0539,
+        "angle_deg": 81.12
+      },
+      {
+        "frame": 105,
+        "timestamp_s": 4.0929,
+        "angle_deg": 80.98
+      },
+      {
+        "frame": 106,
+        "timestamp_s": 4.1319,
+        "angle_deg": 80.29
+      }
+    ],
+    "right_pelvis_femur": [
+      {
+        "frame": 0,
+        "timestamp_s": 0.0,
+        "angle_deg": 87.7
+      },
+      {
+        "frame": 1,
+        "timestamp_s": 0.039,
+        "angle_deg": 93.02
+      },
+      {
+        "frame": 2,
+        "timestamp_s": 0.078,
+        "angle_deg": 92.59
+      },
+      {
+        "frame": 3,
+        "timestamp_s": 0.1169,
+        "angle_deg": 95.94
+      },
+      {
+        "frame": 4,
+        "timestamp_s": 0.1559,
+        "angle_deg": 94.42
+      },
+      {
+        "frame": 5,
+        "timestamp_s": 0.1949,
+        "angle_deg": 94.29
+      },
+      {
+        "frame": 6,
+        "timestamp_s": 0.2339,
+        "angle_deg": 93.19
+      },
+      {
+        "frame": 7,
+        "timestamp_s": 0.2729,
+        "angle_deg": 92.51
+      },
+      {
+        "frame": 8,
+        "timestamp_s": 0.3118,
+        "angle_deg": 93.36
+      },
+      {
+        "frame": 9,
+        "timestamp_s": 0.3508,
+        "angle_deg": 93.89
+      },
+      {
+        "frame": 10,
+        "timestamp_s": 0.3898,
+        "angle_deg": 94.64
+      },
+      {
+        "frame": 11,
+        "timestamp_s": 0.4288,
+        "angle_deg": 94.34
+      },
+      {
+        "frame": 12,
+        "timestamp_s": 0.4678,
+        "angle_deg": 95.36
+      },
+      {
+        "frame": 13,
+        "timestamp_s": 0.5067,
+        "angle_deg": 95.13
+      },
+      {
+        "frame": 14,
+        "timestamp_s": 0.5457,
+        "angle_deg": 94.37
+      },
+      {
+        "frame": 15,
+        "timestamp_s": 0.5847,
+        "angle_deg": 94.84
+      },
+      {
+        "frame": 16,
+        "timestamp_s": 0.6237,
+        "angle_deg": 95.96
+      },
+      {
+        "frame": 17,
+        "timestamp_s": 0.6627,
+        "angle_deg": 96.37
+      },
+      {
+        "frame": 18,
+        "timestamp_s": 0.7016,
+        "angle_deg": 97.87
+      },
+      {
+        "frame": 19,
+        "timestamp_s": 0.7406,
+        "angle_deg": 97.68
+      },
+      {
+        "frame": 20,
+        "timestamp_s": 0.7796,
+        "angle_deg": 98.75
+      },
+      {
+        "frame": 21,
+        "timestamp_s": 0.8186,
+        "angle_deg": 98.41
+      },
+      {
+        "frame": 22,
+        "timestamp_s": 0.8576,
+        "angle_deg": 98.22
+      },
+      {
+        "frame": 23,
+        "timestamp_s": 0.8965,
+        "angle_deg": 98.97
+      },
+      {
+        "frame": 24,
+        "timestamp_s": 0.9355,
+        "angle_deg": 99.59
+      },
+      {
+        "frame": 25,
+        "timestamp_s": 0.9745,
+        "angle_deg": 99.33
+      },
+      {
+        "frame": 26,
+        "timestamp_s": 1.0135,
+        "angle_deg": 98.02
+      },
+      {
+        "frame": 27,
+        "timestamp_s": 1.0525,
+        "angle_deg": 95.27
+      },
+      {
+        "frame": 28,
+        "timestamp_s": 1.0914,
+        "angle_deg": 93.81
+      },
+      {
+        "frame": 29,
+        "timestamp_s": 1.1304,
+        "angle_deg": 90.55
+      },
+      {
+        "frame": 30,
+        "timestamp_s": 1.1694,
+        "angle_deg": 89.34
+      },
+      {
+        "frame": 31,
+        "timestamp_s": 1.2084,
+        "angle_deg": 87.42
+      },
+      {
+        "frame": 32,
+        "timestamp_s": 1.2474,
+        "angle_deg": 86.73
+      },
+      {
+        "frame": 33,
+        "timestamp_s": 1.2863,
+        "angle_deg": 86.98
+      },
+      {
+        "frame": 34,
+        "timestamp_s": 1.3253,
+        "angle_deg": 85.29
+      },
+      {
+        "frame": 35,
+        "timestamp_s": 1.3643,
+        "angle_deg": 79.71
+      },
+      {
+        "frame": 36,
+        "timestamp_s": 1.4033,
+        "angle_deg": 78.61
+      },
+      {
+        "frame": 37,
+        "timestamp_s": 1.4423,
+        "angle_deg": 79.76
+      },
+      {
+        "frame": 38,
+        "timestamp_s": 1.4812,
+        "angle_deg": 80.11
+      },
+      {
+        "frame": 39,
+        "timestamp_s": 1.5202,
+        "angle_deg": 81.02
+      },
+      {
+        "frame": 40,
+        "timestamp_s": 1.5592,
+        "angle_deg": 87.01
+      },
+      {
+        "frame": 41,
+        "timestamp_s": 1.5982,
+        "angle_deg": 89.09
+      },
+      {
+        "frame": 42,
+        "timestamp_s": 1.6372,
+        "angle_deg": 91.54
+      },
+      {
+        "frame": 43,
+        "timestamp_s": 1.6762,
+        "angle_deg": 90.32
+      },
+      {
+        "frame": 44,
+        "timestamp_s": 1.7151,
+        "angle_deg": 91.0
+      },
+      {
+        "frame": 45,
+        "timestamp_s": 1.7541,
+        "angle_deg": 88.79
+      },
+      {
+        "frame": 46,
+        "timestamp_s": 1.7931,
+        "angle_deg": 79.06
+      },
+      {
+        "frame": 47,
+        "timestamp_s": 1.8321,
+        "angle_deg": 81.1
+      },
+      {
+        "frame": 48,
+        "timestamp_s": 1.8711,
+        "angle_deg": 80.8
+      },
+      {
+        "frame": 49,
+        "timestamp_s": 1.91,
+        "angle_deg": 81.67
+      },
+      {
+        "frame": 50,
+        "timestamp_s": 1.949,
+        "angle_deg": 80.67
+      },
+      {
+        "frame": 51,
+        "timestamp_s": 1.988,
+        "angle_deg": 80.38
+      },
+      {
+        "frame": 52,
+        "timestamp_s": 2.027,
+        "angle_deg": 79.94
+      },
+      {
+        "frame": 53,
+        "timestamp_s": 2.066,
+        "angle_deg": 87.63
+      },
+      {
+        "frame": 54,
+        "timestamp_s": 2.1049,
+        "angle_deg": 88.21
+      },
+      {
+        "frame": 55,
+        "timestamp_s": 2.1439,
+        "angle_deg": 85.29
+      },
+      {
+        "frame": 56,
+        "timestamp_s": 2.1829,
+        "angle_deg": 79.24
+      },
+      {
+        "frame": 57,
+        "timestamp_s": 2.2219,
+        "angle_deg": 79.52
+      },
+      {
+        "frame": 58,
+        "timestamp_s": 2.2609,
+        "angle_deg": 77.09
+      },
+      {
+        "frame": 59,
+        "timestamp_s": 2.2998,
+        "angle_deg": 77.15
+      },
+      {
+        "frame": 60,
+        "timestamp_s": 2.3388,
+        "angle_deg": 78.48
+      },
+      {
+        "frame": 61,
+        "timestamp_s": 2.3778,
+        "angle_deg": 80.99
+      },
+      {
+        "frame": 62,
+        "timestamp_s": 2.4168,
+        "angle_deg": 81.57
+      },
+      {
+        "frame": 63,
+        "timestamp_s": 2.4558,
+        "angle_deg": 82.44
+      },
+      {
+        "frame": 64,
+        "timestamp_s": 2.4947,
+        "angle_deg": 81.97
+      },
+      {
+        "frame": 65,
+        "timestamp_s": 2.5337,
+        "angle_deg": 78.67
+      },
+      {
+        "frame": 66,
+        "timestamp_s": 2.5727,
+        "angle_deg": 78.43
+      },
+      {
+        "frame": 67,
+        "timestamp_s": 2.6117,
+        "angle_deg": 77.58
+      },
+      {
+        "frame": 68,
+        "timestamp_s": 2.6507,
+        "angle_deg": 75.73
+      },
+      {
+        "frame": 69,
+        "timestamp_s": 2.6896,
+        "angle_deg": 76.93
+      },
+      {
+        "frame": 70,
+        "timestamp_s": 2.7286,
+        "angle_deg": 77.8
+      },
+      {
+        "frame": 71,
+        "timestamp_s": 2.7676,
+        "angle_deg": 77.8
+      },
+      {
+        "frame": 72,
+        "timestamp_s": 2.8066,
+        "angle_deg": 81.14
+      },
+      {
+        "frame": 73,
+        "timestamp_s": 2.8456,
+        "angle_deg": 82.42
+      },
+      {
+        "frame": 74,
+        "timestamp_s": 2.8845,
+        "angle_deg": 82.43
+      },
+      {
+        "frame": 75,
+        "timestamp_s": 2.9235,
+        "angle_deg": 83.36
+      },
+      {
+        "frame": 76,
+        "timestamp_s": 2.9625,
+        "angle_deg": 86.07
+      },
+      {
+        "frame": 77,
+        "timestamp_s": 3.0015,
+        "angle_deg": 84.56
+      },
+      {
+        "frame": 78,
+        "timestamp_s": 3.0405,
+        "angle_deg": 82.62
+      },
+      {
+        "frame": 79,
+        "timestamp_s": 3.0794,
+        "angle_deg": 86.67
+      },
+      {
+        "frame": 80,
+        "timestamp_s": 3.1184,
+        "angle_deg": 84.3
+      },
+      {
+        "frame": 81,
+        "timestamp_s": 3.1574,
+        "angle_deg": 85.43
+      },
+      {
+        "frame": 82,
+        "timestamp_s": 3.1964,
+        "angle_deg": 83.07
+      },
+      {
+        "frame": 83,
+        "timestamp_s": 3.2354,
+        "angle_deg": 82.61
+      },
+      {
+        "frame": 84,
+        "timestamp_s": 3.2743,
+        "angle_deg": 80.87
+      },
+      {
+        "frame": 85,
+        "timestamp_s": 3.3133,
+        "angle_deg": 80.7
+      },
+      {
+        "frame": 86,
+        "timestamp_s": 3.3523,
+        "angle_deg": 81.66
+      },
+      {
+        "frame": 87,
+        "timestamp_s": 3.3913,
+        "angle_deg": 84.55
+      },
+      {
+        "frame": 88,
+        "timestamp_s": 3.4303,
+        "angle_deg": 85.76
+      },
+      {
+        "frame": 89,
+        "timestamp_s": 3.4692,
+        "angle_deg": 91.57
+      },
+      {
+        "frame": 90,
+        "timestamp_s": 3.5082,
+        "angle_deg": 89.08
+      },
+      {
+        "frame": 91,
+        "timestamp_s": 3.5472,
+        "angle_deg": 90.64
+      },
+      {
+        "frame": 92,
+        "timestamp_s": 3.5862,
+        "angle_deg": 88.52
+      },
+      {
+        "frame": 93,
+        "timestamp_s": 3.6252,
+        "angle_deg": 89.45
+      },
+      {
+        "frame": 94,
+        "timestamp_s": 3.6641,
+        "angle_deg": 88.08
+      },
+      {
+        "frame": 95,
+        "timestamp_s": 3.7031,
+        "angle_deg": 88.02
+      },
+      {
+        "frame": 96,
+        "timestamp_s": 3.7421,
+        "angle_deg": 87.17
+      },
+      {
+        "frame": 97,
+        "timestamp_s": 3.7811,
+        "angle_deg": 87.02
+      },
+      {
+        "frame": 98,
+        "timestamp_s": 3.8201,
+        "angle_deg": 86.47
+      },
+      {
+        "frame": 99,
+        "timestamp_s": 3.859,
+        "angle_deg": 86.69
+      },
+      {
+        "frame": 100,
+        "timestamp_s": 3.898,
+        "angle_deg": 85.5
+      },
+      {
+        "frame": 101,
+        "timestamp_s": 3.937,
+        "angle_deg": 84.96
+      },
+      {
+        "frame": 102,
+        "timestamp_s": 3.976,
+        "angle_deg": 83.46
+      },
+      {
+        "frame": 103,
+        "timestamp_s": 4.015,
+        "angle_deg": 82.64
+      },
+      {
+        "frame": 104,
+        "timestamp_s": 4.0539,
+        "angle_deg": 82.47
+      },
+      {
+        "frame": 105,
+        "timestamp_s": 4.0929,
+        "angle_deg": 83.36
+      },
+      {
+        "frame": 106,
+        "timestamp_s": 4.1319,
+        "angle_deg": 85.31
+      }
+    ],
+    "left_ankle": [],
+    "right_ankle": [],
+    "left_elbow": [
+      {
+        "frame": 0,
+        "timestamp_s": 0.0,
+        "angle_deg": 76.17
+      },
+      {
+        "frame": 1,
+        "timestamp_s": 0.039,
+        "angle_deg": 80.06
+      },
+      {
+        "frame": 2,
+        "timestamp_s": 0.078,
+        "angle_deg": 78.85
+      },
+      {
+        "frame": 3,
+        "timestamp_s": 0.1169,
+        "angle_deg": 80.89
+      },
+      {
+        "frame": 4,
+        "timestamp_s": 0.1559,
+        "angle_deg": 78.92
+      },
+      {
+        "frame": 5,
+        "timestamp_s": 0.1949,
+        "angle_deg": 78.32
+      },
+      {
+        "frame": 6,
+        "timestamp_s": 0.2339,
+        "angle_deg": 81.1
+      },
+      {
+        "frame": 7,
+        "timestamp_s": 0.2729,
+        "angle_deg": 80.92
+      },
+      {
+        "frame": 8,
+        "timestamp_s": 0.3118,
+        "angle_deg": 81.42
+      },
+      {
+        "frame": 9,
+        "timestamp_s": 0.3508,
+        "angle_deg": 79.86
+      },
+      {
+        "frame": 10,
+        "timestamp_s": 0.3898,
+        "angle_deg": 77.32
+      },
+      {
+        "frame": 11,
+        "timestamp_s": 0.4288,
+        "angle_deg": 74.76
+      },
+      {
+        "frame": 12,
+        "timestamp_s": 0.4678,
+        "angle_deg": 74.9
+      },
+      {
+        "frame": 13,
+        "timestamp_s": 0.5067,
+        "angle_deg": 75.66
+      },
+      {
+        "frame": 14,
+        "timestamp_s": 0.5457,
+        "angle_deg": 75.3
+      },
+      {
+        "frame": 15,
+        "timestamp_s": 0.5847,
+        "angle_deg": 75.94
+      },
+      {
+        "frame": 16,
+        "timestamp_s": 0.6237,
+        "angle_deg": 70.33
+      },
+      {
+        "frame": 17,
+        "timestamp_s": 0.6627,
+        "angle_deg": 70.33
+      },
+      {
+        "frame": 18,
+        "timestamp_s": 0.7016,
+        "angle_deg": 70.02
+      },
+      {
+        "frame": 19,
+        "timestamp_s": 0.7406,
+        "angle_deg": 70.62
+      },
+      {
+        "frame": 20,
+        "timestamp_s": 0.7796,
+        "angle_deg": 71.11
+      },
+      {
+        "frame": 21,
+        "timestamp_s": 0.8186,
+        "angle_deg": 69.7
+      },
+      {
+        "frame": 22,
+        "timestamp_s": 0.8576,
+        "angle_deg": 69.18
+      },
+      {
+        "frame": 23,
+        "timestamp_s": 0.8965,
+        "angle_deg": 70.17
+      },
+      {
+        "frame": 24,
+        "timestamp_s": 0.9355,
+        "angle_deg": 70.62
+      },
+      {
+        "frame": 25,
+        "timestamp_s": 0.9745,
+        "angle_deg": 69.86
+      },
+      {
+        "frame": 26,
+        "timestamp_s": 1.0135,
+        "angle_deg": 71.12
+      },
+      {
+        "frame": 27,
+        "timestamp_s": 1.0525,
+        "angle_deg": 70.2
+      },
+      {
+        "frame": 28,
+        "timestamp_s": 1.0914,
+        "angle_deg": 71.86
+      },
+      {
+        "frame": 29,
+        "timestamp_s": 1.1304,
+        "angle_deg": 69.33
+      },
+      {
+        "frame": 30,
+        "timestamp_s": 1.1694,
+        "angle_deg": 66.92
+      },
+      {
+        "frame": 31,
+        "timestamp_s": 1.2084,
+        "angle_deg": 72.41
+      },
+      {
+        "frame": 32,
+        "timestamp_s": 1.2474,
+        "angle_deg": 69.83
+      },
+      {
+        "frame": 33,
+        "timestamp_s": 1.2863,
+        "angle_deg": 69.16
+      },
+      {
+        "frame": 34,
+        "timestamp_s": 1.3253,
+        "angle_deg": 71.66
+      },
+      {
+        "frame": 35,
+        "timestamp_s": 1.3643,
+        "angle_deg": 66.82
+      },
+      {
+        "frame": 36,
+        "timestamp_s": 1.4033,
+        "angle_deg": 69.43
+      },
+      {
+        "frame": 37,
+        "timestamp_s": 1.4423,
+        "angle_deg": 66.12
+      },
+      {
+        "frame": 38,
+        "timestamp_s": 1.4812,
+        "angle_deg": 65.47
+      },
+      {
+        "frame": 39,
+        "timestamp_s": 1.5202,
+        "angle_deg": 68.33
+      },
+      {
+        "frame": 40,
+        "timestamp_s": 1.5592,
+        "angle_deg": 65.01
+      },
+      {
+        "frame": 41,
+        "timestamp_s": 1.5982,
+        "angle_deg": 63.35
+      },
+      {
+        "frame": 42,
+        "timestamp_s": 1.6372,
+        "angle_deg": 58.29
+      },
+      {
+        "frame": 43,
+        "timestamp_s": 1.6762,
+        "angle_deg": 58.64
+      },
+      {
+        "frame": 44,
+        "timestamp_s": 1.7151,
+        "angle_deg": 51.38
+      },
+      {
+        "frame": 45,
+        "timestamp_s": 1.7541,
+        "angle_deg": 54.65
+      },
+      {
+        "frame": 46,
+        "timestamp_s": 1.7931,
+        "angle_deg": 80.79
+      },
+      {
+        "frame": 47,
+        "timestamp_s": 1.8321,
+        "angle_deg": 76.47
+      },
+      {
+        "frame": 48,
+        "timestamp_s": 1.8711,
+        "angle_deg": 84.13
+      },
+      {
+        "frame": 49,
+        "timestamp_s": 1.91,
+        "angle_deg": 109.93
+      },
+      {
+        "frame": 50,
+        "timestamp_s": 1.949,
+        "angle_deg": 122.58
+      },
+      {
+        "frame": 51,
+        "timestamp_s": 1.988,
+        "angle_deg": 123.54
+      },
+      {
+        "frame": 52,
+        "timestamp_s": 2.027,
+        "angle_deg": 135.82
+      },
+      {
+        "frame": 53,
+        "timestamp_s": 2.066,
+        "angle_deg": 140.41
+      },
+      {
+        "frame": 97,
+        "timestamp_s": 3.7811,
+        "angle_deg": 156.32
+      },
+      {
+        "frame": 98,
+        "timestamp_s": 3.8201,
+        "angle_deg": 159.07
+      },
+      {
+        "frame": 99,
+        "timestamp_s": 3.859,
+        "angle_deg": 160.07
+      },
+      {
+        "frame": 100,
+        "timestamp_s": 3.898,
+        "angle_deg": 156.27
+      },
+      {
+        "frame": 101,
+        "timestamp_s": 3.937,
+        "angle_deg": 154.08
+      },
+      {
+        "frame": 102,
+        "timestamp_s": 3.976,
+        "angle_deg": 150.06
+      },
+      {
+        "frame": 103,
+        "timestamp_s": 4.015,
+        "angle_deg": 150.74
+      },
+      {
+        "frame": 104,
+        "timestamp_s": 4.0539,
+        "angle_deg": 152.51
+      },
+      {
+        "frame": 105,
+        "timestamp_s": 4.0929,
+        "angle_deg": 154.57
+      },
+      {
+        "frame": 106,
+        "timestamp_s": 4.1319,
+        "angle_deg": 160.43
+      }
+    ],
+    "right_elbow": [
+      {
+        "frame": 0,
+        "timestamp_s": 0.0,
+        "angle_deg": 56.86
+      },
+      {
+        "frame": 1,
+        "timestamp_s": 0.039,
+        "angle_deg": 58.02
+      },
+      {
+        "frame": 2,
+        "timestamp_s": 0.078,
+        "angle_deg": 59.68
+      },
+      {
+        "frame": 3,
+        "timestamp_s": 0.1169,
+        "angle_deg": 61.88
+      },
+      {
+        "frame": 4,
+        "timestamp_s": 0.1559,
+        "angle_deg": 61.8
+      },
+      {
+        "frame": 5,
+        "timestamp_s": 0.1949,
+        "angle_deg": 61.44
+      },
+      {
+        "frame": 6,
+        "timestamp_s": 0.2339,
+        "angle_deg": 61.26
+      },
+      {
+        "frame": 7,
+        "timestamp_s": 0.2729,
+        "angle_deg": 61.41
+      },
+      {
+        "frame": 8,
+        "timestamp_s": 0.3118,
+        "angle_deg": 62.85
+      },
+      {
+        "frame": 9,
+        "timestamp_s": 0.3508,
+        "angle_deg": 63.96
+      },
+      {
+        "frame": 10,
+        "timestamp_s": 0.3898,
+        "angle_deg": 64.47
+      },
+      {
+        "frame": 11,
+        "timestamp_s": 0.4288,
+        "angle_deg": 65.86
+      },
+      {
+        "frame": 12,
+        "timestamp_s": 0.4678,
+        "angle_deg": 67.35
+      },
+      {
+        "frame": 13,
+        "timestamp_s": 0.5067,
+        "angle_deg": 68.23
+      },
+      {
+        "frame": 14,
+        "timestamp_s": 0.5457,
+        "angle_deg": 68.33
+      },
+      {
+        "frame": 15,
+        "timestamp_s": 0.5847,
+        "angle_deg": 67.41
+      },
+      {
+        "frame": 16,
+        "timestamp_s": 0.6237,
+        "angle_deg": 83.17
+      },
+      {
+        "frame": 17,
+        "timestamp_s": 0.6627,
+        "angle_deg": 79.55
+      },
+      {
+        "frame": 18,
+        "timestamp_s": 0.7016,
+        "angle_deg": 79.21
+      },
+      {
+        "frame": 19,
+        "timestamp_s": 0.7406,
+        "angle_deg": 79.04
+      },
+      {
+        "frame": 20,
+        "timestamp_s": 0.7796,
+        "angle_deg": 80.67
+      },
+      {
+        "frame": 21,
+        "timestamp_s": 0.8186,
+        "angle_deg": 81.76
+      },
+      {
+        "frame": 22,
+        "timestamp_s": 0.8576,
+        "angle_deg": 86.59
+      },
+      {
+        "frame": 23,
+        "timestamp_s": 0.8965,
+        "angle_deg": 83.93
+      },
+      {
+        "frame": 24,
+        "timestamp_s": 0.9355,
+        "angle_deg": 83.44
+      },
+      {
+        "frame": 25,
+        "timestamp_s": 0.9745,
+        "angle_deg": 82.4
+      },
+      {
+        "frame": 26,
+        "timestamp_s": 1.0135,
+        "angle_deg": 80.27
+      },
+      {
+        "frame": 27,
+        "timestamp_s": 1.0525,
+        "angle_deg": 75.2
+      },
+      {
+        "frame": 28,
+        "timestamp_s": 1.0914,
+        "angle_deg": 61.04
+      },
+      {
+        "frame": 29,
+        "timestamp_s": 1.1304,
+        "angle_deg": 62.97
+      },
+      {
+        "frame": 30,
+        "timestamp_s": 1.1694,
+        "angle_deg": 62.41
+      },
+      {
+        "frame": 31,
+        "timestamp_s": 1.2084,
+        "angle_deg": 57.14
+      },
+      {
+        "frame": 32,
+        "timestamp_s": 1.2474,
+        "angle_deg": 56.12
+      },
+      {
+        "frame": 33,
+        "timestamp_s": 1.2863,
+        "angle_deg": 57.58
+      },
+      {
+        "frame": 34,
+        "timestamp_s": 1.3253,
+        "angle_deg": 55.83
+      },
+      {
+        "frame": 35,
+        "timestamp_s": 1.3643,
+        "angle_deg": 51.06
+      },
+      {
+        "frame": 36,
+        "timestamp_s": 1.4033,
+        "angle_deg": 51.0
+      },
+      {
+        "frame": 37,
+        "timestamp_s": 1.4423,
+        "angle_deg": 48.1
+      },
+      {
+        "frame": 38,
+        "timestamp_s": 1.4812,
+        "angle_deg": 45.34
+      },
+      {
+        "frame": 39,
+        "timestamp_s": 1.5202,
+        "angle_deg": 41.62
+      },
+      {
+        "frame": 40,
+        "timestamp_s": 1.5592,
+        "angle_deg": 41.25
+      },
+      {
+        "frame": 41,
+        "timestamp_s": 1.5982,
+        "angle_deg": 43.03
+      },
+      {
+        "frame": 42,
+        "timestamp_s": 1.6372,
+        "angle_deg": 51.82
+      },
+      {
+        "frame": 43,
+        "timestamp_s": 1.6762,
+        "angle_deg": 53.22
+      },
+      {
+        "frame": 44,
+        "timestamp_s": 1.7151,
+        "angle_deg": 60.47
+      },
+      {
+        "frame": 45,
+        "timestamp_s": 1.7541,
+        "angle_deg": 58.93
+      },
+      {
+        "frame": 46,
+        "timestamp_s": 1.7931,
+        "angle_deg": 74.5
+      },
+      {
+        "frame": 47,
+        "timestamp_s": 1.8321,
+        "angle_deg": 79.98
+      },
+      {
+        "frame": 48,
+        "timestamp_s": 1.8711,
+        "angle_deg": 88.11
+      },
+      {
+        "frame": 49,
+        "timestamp_s": 1.91,
+        "angle_deg": 87.93
+      },
+      {
+        "frame": 50,
+        "timestamp_s": 1.949,
+        "angle_deg": 99.18
+      },
+      {
+        "frame": 51,
+        "timestamp_s": 1.988,
+        "angle_deg": 104.09
+      },
+      {
+        "frame": 52,
+        "timestamp_s": 2.027,
+        "angle_deg": 114.11
+      },
+      {
+        "frame": 53,
+        "timestamp_s": 2.066,
+        "angle_deg": 120.16
+      },
+      {
+        "frame": 54,
+        "timestamp_s": 2.1049,
+        "angle_deg": 129.64
+      },
+      {
+        "frame": 55,
+        "timestamp_s": 2.1439,
+        "angle_deg": 129.69
+      },
+      {
+        "frame": 56,
+        "timestamp_s": 2.1829,
+        "angle_deg": 120.51
+      },
+      {
+        "frame": 57,
+        "timestamp_s": 2.2219,
+        "angle_deg": 116.9
+      },
+      {
+        "frame": 58,
+        "timestamp_s": 2.2609,
+        "angle_deg": 118.8
+      },
+      {
+        "frame": 59,
+        "timestamp_s": 2.2998,
+        "angle_deg": 118.22
+      },
+      {
+        "frame": 60,
+        "timestamp_s": 2.3388,
+        "angle_deg": 105.48
+      },
+      {
+        "frame": 61,
+        "timestamp_s": 2.3778,
+        "angle_deg": 126.81
+      },
+      {
+        "frame": 62,
+        "timestamp_s": 2.4168,
+        "angle_deg": 102.57
+      },
+      {
+        "frame": 63,
+        "timestamp_s": 2.4558,
+        "angle_deg": 98.82
+      },
+      {
+        "frame": 64,
+        "timestamp_s": 2.4947,
+        "angle_deg": 98.39
+      },
+      {
+        "frame": 65,
+        "timestamp_s": 2.5337,
+        "angle_deg": 94.03
+      },
+      {
+        "frame": 66,
+        "timestamp_s": 2.5727,
+        "angle_deg": 91.56
+      },
+      {
+        "frame": 67,
+        "timestamp_s": 2.6117,
+        "angle_deg": 90.17
+      },
+      {
+        "frame": 68,
+        "timestamp_s": 2.6507,
+        "angle_deg": 89.3
+      },
+      {
+        "frame": 69,
+        "timestamp_s": 2.6896,
+        "angle_deg": 93.51
+      },
+      {
+        "frame": 70,
+        "timestamp_s": 2.7286,
+        "angle_deg": 89.46
+      },
+      {
+        "frame": 71,
+        "timestamp_s": 2.7676,
+        "angle_deg": 94.49
+      },
+      {
+        "frame": 72,
+        "timestamp_s": 2.8066,
+        "angle_deg": 95.67
+      },
+      {
+        "frame": 73,
+        "timestamp_s": 2.8456,
+        "angle_deg": 103.39
+      },
+      {
+        "frame": 74,
+        "timestamp_s": 2.8845,
+        "angle_deg": 125.56
+      },
+      {
+        "frame": 75,
+        "timestamp_s": 2.9235,
+        "angle_deg": 121.4
+      },
+      {
+        "frame": 76,
+        "timestamp_s": 2.9625,
+        "angle_deg": 107.45
+      },
+      {
+        "frame": 77,
+        "timestamp_s": 3.0015,
+        "angle_deg": 96.17
+      },
+      {
+        "frame": 78,
+        "timestamp_s": 3.0405,
+        "angle_deg": 86.76
+      },
+      {
+        "frame": 79,
+        "timestamp_s": 3.0794,
+        "angle_deg": 91.13
+      },
+      {
+        "frame": 80,
+        "timestamp_s": 3.1184,
+        "angle_deg": 85.45
+      },
+      {
+        "frame": 81,
+        "timestamp_s": 3.1574,
+        "angle_deg": 100.48
+      },
+      {
+        "frame": 82,
+        "timestamp_s": 3.1964,
+        "angle_deg": 107.4
+      },
+      {
+        "frame": 83,
+        "timestamp_s": 3.2354,
+        "angle_deg": 108.41
+      },
+      {
+        "frame": 84,
+        "timestamp_s": 3.2743,
+        "angle_deg": 127.24
+      },
+      {
+        "frame": 85,
+        "timestamp_s": 3.3133,
+        "angle_deg": 142.34
+      },
+      {
+        "frame": 86,
+        "timestamp_s": 3.3523,
+        "angle_deg": 156.17
+      },
+      {
+        "frame": 87,
+        "timestamp_s": 3.3913,
+        "angle_deg": 156.21
+      },
+      {
+        "frame": 88,
+        "timestamp_s": 3.4303,
+        "angle_deg": 156.63
+      },
+      {
+        "frame": 89,
+        "timestamp_s": 3.4692,
+        "angle_deg": 125.89
+      },
+      {
+        "frame": 90,
+        "timestamp_s": 3.5082,
+        "angle_deg": 123.61
+      },
+      {
+        "frame": 91,
+        "timestamp_s": 3.5472,
+        "angle_deg": 165.38
+      },
+      {
+        "frame": 92,
+        "timestamp_s": 3.5862,
+        "angle_deg": 156.48
+      },
+      {
+        "frame": 93,
+        "timestamp_s": 3.6252,
+        "angle_deg": 155.93
+      },
+      {
+        "frame": 94,
+        "timestamp_s": 3.6641,
+        "angle_deg": 154.79
+      },
+      {
+        "frame": 95,
+        "timestamp_s": 3.7031,
+        "angle_deg": 154.27
+      },
+      {
+        "frame": 96,
+        "timestamp_s": 3.7421,
+        "angle_deg": 151.06
+      },
+      {
+        "frame": 97,
+        "timestamp_s": 3.7811,
+        "angle_deg": 147.07
+      },
+      {
+        "frame": 98,
+        "timestamp_s": 3.8201,
+        "angle_deg": 148.15
+      },
+      {
+        "frame": 99,
+        "timestamp_s": 3.859,
+        "angle_deg": 141.71
+      },
+      {
+        "frame": 100,
+        "timestamp_s": 3.898,
+        "angle_deg": 133.73
+      },
+      {
+        "frame": 101,
+        "timestamp_s": 3.937,
+        "angle_deg": 126.14
+      },
+      {
+        "frame": 102,
+        "timestamp_s": 3.976,
+        "angle_deg": 120.49
+      },
+      {
+        "frame": 103,
+        "timestamp_s": 4.015,
+        "angle_deg": 116.51
+      },
+      {
+        "frame": 104,
+        "timestamp_s": 4.0539,
+        "angle_deg": 116.84
+      },
+      {
+        "frame": 105,
+        "timestamp_s": 4.0929,
+        "angle_deg": 117.53
+      },
+      {
+        "frame": 106,
+        "timestamp_s": 4.1319,
+        "angle_deg": 123.94
+      }
+    ],
+    "left_shoulder": [
+      {
+        "frame": 0,
+        "timestamp_s": 0.0,
+        "angle_deg": 1.98
+      },
+      {
+        "frame": 1,
+        "timestamp_s": 0.039,
+        "angle_deg": 5.05
+      },
+      {
+        "frame": 2,
+        "timestamp_s": 0.078,
+        "angle_deg": 5.54
+      },
+      {
+        "frame": 3,
+        "timestamp_s": 0.1169,
+        "angle_deg": 6.83
+      },
+      {
+        "frame": 4,
+        "timestamp_s": 0.1559,
+        "angle_deg": 5.49
+      },
+      {
+        "frame": 5,
+        "timestamp_s": 0.1949,
+        "angle_deg": 5.33
+      },
+      {
+        "frame": 6,
+        "timestamp_s": 0.2339,
+        "angle_deg": 6.75
+      },
+      {
+        "frame": 7,
+        "timestamp_s": 0.2729,
+        "angle_deg": 6.47
+      },
+      {
+        "frame": 8,
+        "timestamp_s": 0.3118,
+        "angle_deg": 6.52
+      },
+      {
+        "frame": 9,
+        "timestamp_s": 0.3508,
+        "angle_deg": 6.26
+      },
+      {
+        "frame": 10,
+        "timestamp_s": 0.3898,
+        "angle_deg": 4.77
+      },
+      {
+        "frame": 11,
+        "timestamp_s": 0.4288,
+        "angle_deg": 1.81
+      },
+      {
+        "frame": 12,
+        "timestamp_s": 0.4678,
+        "angle_deg": 2.21
+      },
+      {
+        "frame": 13,
+        "timestamp_s": 0.5067,
+        "angle_deg": 1.69
+      },
+      {
+        "frame": 14,
+        "timestamp_s": 0.5457,
+        "angle_deg": 1.09
+      },
+      {
+        "frame": 15,
+        "timestamp_s": 0.5847,
+        "angle_deg": 1.1
+      },
+      {
+        "frame": 16,
+        "timestamp_s": 0.6237,
+        "angle_deg": 2.83
+      },
+      {
+        "frame": 17,
+        "timestamp_s": 0.6627,
+        "angle_deg": 4.12
+      },
+      {
+        "frame": 18,
+        "timestamp_s": 0.7016,
+        "angle_deg": 3.83
+      },
+      {
+        "frame": 19,
+        "timestamp_s": 0.7406,
+        "angle_deg": 4.06
+      },
+      {
+        "frame": 20,
+        "timestamp_s": 0.7796,
+        "angle_deg": 4.92
+      },
+      {
+        "frame": 21,
+        "timestamp_s": 0.8186,
+        "angle_deg": 6.85
+      },
+      {
+        "frame": 22,
+        "timestamp_s": 0.8576,
+        "angle_deg": 8.23
+      },
+      {
+        "frame": 23,
+        "timestamp_s": 0.8965,
+        "angle_deg": 7.92
+      },
+      {
+        "frame": 24,
+        "timestamp_s": 0.9355,
+        "angle_deg": 7.67
+      },
+      {
+        "frame": 25,
+        "timestamp_s": 0.9745,
+        "angle_deg": 7.65
+      },
+      {
+        "frame": 26,
+        "timestamp_s": 1.0135,
+        "angle_deg": 6.0
+      },
+      {
+        "frame": 27,
+        "timestamp_s": 1.0525,
+        "angle_deg": 5.51
+      },
+      {
+        "frame": 28,
+        "timestamp_s": 1.0914,
+        "angle_deg": 4.47
+      },
+      {
+        "frame": 29,
+        "timestamp_s": 1.1304,
+        "angle_deg": 8.17
+      },
+      {
+        "frame": 30,
+        "timestamp_s": 1.1694,
+        "angle_deg": 5.95
+      },
+      {
+        "frame": 31,
+        "timestamp_s": 1.2084,
+        "angle_deg": 4.52
+      },
+      {
+        "frame": 32,
+        "timestamp_s": 1.2474,
+        "angle_deg": 7.49
+      },
+      {
+        "frame": 33,
+        "timestamp_s": 1.2863,
+        "angle_deg": 6.92
+      },
+      {
+        "frame": 34,
+        "timestamp_s": 1.3253,
+        "angle_deg": 7.48
+      },
+      {
+        "frame": 35,
+        "timestamp_s": 1.3643,
+        "angle_deg": 4.59
+      },
+      {
+        "frame": 36,
+        "timestamp_s": 1.4033,
+        "angle_deg": 6.98
+      },
+      {
+        "frame": 37,
+        "timestamp_s": 1.4423,
+        "angle_deg": 8.96
+      },
+      {
+        "frame": 38,
+        "timestamp_s": 1.4812,
+        "angle_deg": 13.67
+      },
+      {
+        "frame": 39,
+        "timestamp_s": 1.5202,
+        "angle_deg": 15.5
+      },
+      {
+        "frame": 40,
+        "timestamp_s": 1.5592,
+        "angle_deg": 15.49
+      },
+      {
+        "frame": 41,
+        "timestamp_s": 1.5982,
+        "angle_deg": 19.45
+      },
+      {
+        "frame": 42,
+        "timestamp_s": 1.6372,
+        "angle_deg": 21.01
+      },
+      {
+        "frame": 43,
+        "timestamp_s": 1.6762,
+        "angle_deg": 22.2
+      },
+      {
+        "frame": 44,
+        "timestamp_s": 1.7151,
+        "angle_deg": 25.44
+      },
+      {
+        "frame": 45,
+        "timestamp_s": 1.7541,
+        "angle_deg": 27.0
+      },
+      {
+        "frame": 46,
+        "timestamp_s": 1.7931,
+        "angle_deg": 37.41
+      },
+      {
+        "frame": 47,
+        "timestamp_s": 1.8321,
+        "angle_deg": 42.75
+      },
+      {
+        "frame": 48,
+        "timestamp_s": 1.8711,
+        "angle_deg": 55.89
+      },
+      {
+        "frame": 49,
+        "timestamp_s": 1.91,
+        "angle_deg": 98.3
+      },
+      {
+        "frame": 50,
+        "timestamp_s": 1.949,
+        "angle_deg": 119.13
+      },
+      {
+        "frame": 51,
+        "timestamp_s": 1.988,
+        "angle_deg": 121.07
+      },
+      {
+        "frame": 52,
+        "timestamp_s": 2.027,
+        "angle_deg": 128.88
+      },
+      {
+        "frame": 53,
+        "timestamp_s": 2.066,
+        "angle_deg": 139.76
+      },
+      {
+        "frame": 97,
+        "timestamp_s": 3.7811,
+        "angle_deg": 9.3
+      },
+      {
+        "frame": 98,
+        "timestamp_s": 3.8201,
+        "angle_deg": 14.8
+      },
+      {
+        "frame": 99,
+        "timestamp_s": 3.859,
+        "angle_deg": 17.82
+      },
+      {
+        "frame": 100,
+        "timestamp_s": 3.898,
+        "angle_deg": 19.23
+      },
+      {
+        "frame": 101,
+        "timestamp_s": 3.937,
+        "angle_deg": 19.6
+      },
+      {
+        "frame": 102,
+        "timestamp_s": 3.976,
+        "angle_deg": 19.15
+      },
+      {
+        "frame": 103,
+        "timestamp_s": 4.015,
+        "angle_deg": 22.67
+      },
+      {
+        "frame": 104,
+        "timestamp_s": 4.0539,
+        "angle_deg": 22.99
+      },
+      {
+        "frame": 105,
+        "timestamp_s": 4.0929,
+        "angle_deg": 23.69
+      },
+      {
+        "frame": 106,
+        "timestamp_s": 4.1319,
+        "angle_deg": 21.7
+      }
+    ],
+    "right_shoulder": [
+      {
+        "frame": 0,
+        "timestamp_s": 0.0,
+        "angle_deg": 21.49
+      },
+      {
+        "frame": 1,
+        "timestamp_s": 0.039,
+        "angle_deg": 14.2
+      },
+      {
+        "frame": 2,
+        "timestamp_s": 0.078,
+        "angle_deg": 15.76
+      },
+      {
+        "frame": 3,
+        "timestamp_s": 0.1169,
+        "angle_deg": 15.69
+      },
+      {
+        "frame": 4,
+        "timestamp_s": 0.1559,
+        "angle_deg": 17.76
+      },
+      {
+        "frame": 5,
+        "timestamp_s": 0.1949,
+        "angle_deg": 17.73
+      },
+      {
+        "frame": 6,
+        "timestamp_s": 0.2339,
+        "angle_deg": 17.62
+      },
+      {
+        "frame": 7,
+        "timestamp_s": 0.2729,
+        "angle_deg": 17.05
+      },
+      {
+        "frame": 8,
+        "timestamp_s": 0.3118,
+        "angle_deg": 16.31
+      },
+      {
+        "frame": 9,
+        "timestamp_s": 0.3508,
+        "angle_deg": 16.19
+      },
+      {
+        "frame": 10,
+        "timestamp_s": 0.3898,
+        "angle_deg": 15.42
+      },
+      {
+        "frame": 11,
+        "timestamp_s": 0.4288,
+        "angle_deg": 16.78
+      },
+      {
+        "frame": 12,
+        "timestamp_s": 0.4678,
+        "angle_deg": 15.9
+      },
+      {
+        "frame": 13,
+        "timestamp_s": 0.5067,
+        "angle_deg": 15.88
+      },
+      {
+        "frame": 14,
+        "timestamp_s": 0.5457,
+        "angle_deg": 16.89
+      },
+      {
+        "frame": 15,
+        "timestamp_s": 0.5847,
+        "angle_deg": 16.01
+      },
+      {
+        "frame": 16,
+        "timestamp_s": 0.6237,
+        "angle_deg": 21.92
+      },
+      {
+        "frame": 17,
+        "timestamp_s": 0.6627,
+        "angle_deg": 22.04
+      },
+      {
+        "frame": 18,
+        "timestamp_s": 0.7016,
+        "angle_deg": 21.7
+      },
+      {
+        "frame": 19,
+        "timestamp_s": 0.7406,
+        "angle_deg": 22.03
+      },
+      {
+        "frame": 20,
+        "timestamp_s": 0.7796,
+        "angle_deg": 22.3
+      },
+      {
+        "frame": 21,
+        "timestamp_s": 0.8186,
+        "angle_deg": 23.5
+      },
+      {
+        "frame": 22,
+        "timestamp_s": 0.8576,
+        "angle_deg": 25.9
+      },
+      {
+        "frame": 23,
+        "timestamp_s": 0.8965,
+        "angle_deg": 23.73
+      },
+      {
+        "frame": 24,
+        "timestamp_s": 0.9355,
+        "angle_deg": 23.17
+      },
+      {
+        "frame": 25,
+        "timestamp_s": 0.9745,
+        "angle_deg": 22.67
+      },
+      {
+        "frame": 26,
+        "timestamp_s": 1.0135,
+        "angle_deg": 22.03
+      },
+      {
+        "frame": 27,
+        "timestamp_s": 1.0525,
+        "angle_deg": 25.35
+      },
+      {
+        "frame": 28,
+        "timestamp_s": 1.0914,
+        "angle_deg": 19.28
+      },
+      {
+        "frame": 29,
+        "timestamp_s": 1.1304,
+        "angle_deg": 25.88
+      },
+      {
+        "frame": 30,
+        "timestamp_s": 1.1694,
+        "angle_deg": 23.79
+      },
+      {
+        "frame": 31,
+        "timestamp_s": 1.2084,
+        "angle_deg": 16.26
+      },
+      {
+        "frame": 32,
+        "timestamp_s": 1.2474,
+        "angle_deg": 17.06
+      },
+      {
+        "frame": 33,
+        "timestamp_s": 1.2863,
+        "angle_deg": 20.6
+      },
+      {
+        "frame": 34,
+        "timestamp_s": 1.3253,
+        "angle_deg": 17.97
+      },
+      {
+        "frame": 35,
+        "timestamp_s": 1.3643,
+        "angle_deg": 22.26
+      },
+      {
+        "frame": 36,
+        "timestamp_s": 1.4033,
+        "angle_deg": 15.32
+      },
+      {
+        "frame": 37,
+        "timestamp_s": 1.4423,
+        "angle_deg": 18.37
+      },
+      {
+        "frame": 38,
+        "timestamp_s": 1.4812,
+        "angle_deg": 23.3
+      },
+      {
+        "frame": 39,
+        "timestamp_s": 1.5202,
+        "angle_deg": 28.55
+      },
+      {
+        "frame": 40,
+        "timestamp_s": 1.5592,
+        "angle_deg": 27.18
+      },
+      {
+        "frame": 41,
+        "timestamp_s": 1.5982,
+        "angle_deg": 31.04
+      },
+      {
+        "frame": 42,
+        "timestamp_s": 1.6372,
+        "angle_deg": 32.83
+      },
+      {
+        "frame": 43,
+        "timestamp_s": 1.6762,
+        "angle_deg": 32.96
+      },
+      {
+        "frame": 44,
+        "timestamp_s": 1.7151,
+        "angle_deg": 41.33
+      },
+      {
+        "frame": 45,
+        "timestamp_s": 1.7541,
+        "angle_deg": 45.22
+      },
+      {
+        "frame": 46,
+        "timestamp_s": 1.7931,
+        "angle_deg": 57.91
+      },
+      {
+        "frame": 47,
+        "timestamp_s": 1.8321,
+        "angle_deg": 63.85
+      },
+      {
+        "frame": 48,
+        "timestamp_s": 1.8711,
+        "angle_deg": 75.38
+      },
+      {
+        "frame": 49,
+        "timestamp_s": 1.91,
+        "angle_deg": 85.95
+      },
+      {
+        "frame": 50,
+        "timestamp_s": 1.949,
+        "angle_deg": 112.29
+      },
+      {
+        "frame": 51,
+        "timestamp_s": 1.988,
+        "angle_deg": 117.81
+      },
+      {
+        "frame": 52,
+        "timestamp_s": 2.027,
+        "angle_deg": 131.17
+      },
+      {
+        "frame": 53,
+        "timestamp_s": 2.066,
+        "angle_deg": 136.04
+      },
+      {
+        "frame": 54,
+        "timestamp_s": 2.1049,
+        "angle_deg": 141.53
+      },
+      {
+        "frame": 55,
+        "timestamp_s": 2.1439,
+        "angle_deg": 143.44
+      },
+      {
+        "frame": 56,
+        "timestamp_s": 2.1829,
+        "angle_deg": 142.43
+      },
+      {
+        "frame": 57,
+        "timestamp_s": 2.2219,
+        "angle_deg": 140.64
+      },
+      {
+        "frame": 58,
+        "timestamp_s": 2.2609,
+        "angle_deg": 140.59
+      },
+      {
+        "frame": 59,
+        "timestamp_s": 2.2998,
+        "angle_deg": 141.05
+      },
+      {
+        "frame": 60,
+        "timestamp_s": 2.3388,
+        "angle_deg": 145.67
+      },
+      {
+        "frame": 61,
+        "timestamp_s": 2.3778,
+        "angle_deg": 142.89
+      },
+      {
+        "frame": 62,
+        "timestamp_s": 2.4168,
+        "angle_deg": 147.19
+      },
+      {
+        "frame": 63,
+        "timestamp_s": 2.4558,
+        "angle_deg": 142.65
+      },
+      {
+        "frame": 64,
+        "timestamp_s": 2.4947,
+        "angle_deg": 140.56
+      },
+      {
+        "frame": 65,
+        "timestamp_s": 2.5337,
+        "angle_deg": 135.41
+      },
+      {
+        "frame": 66,
+        "timestamp_s": 2.5727,
+        "angle_deg": 133.29
+      },
+      {
+        "frame": 67,
+        "timestamp_s": 2.6117,
+        "angle_deg": 132.21
+      },
+      {
+        "frame": 68,
+        "timestamp_s": 2.6507,
+        "angle_deg": 128.71
+      },
+      {
+        "frame": 69,
+        "timestamp_s": 2.6896,
+        "angle_deg": 120.76
+      },
+      {
+        "frame": 70,
+        "timestamp_s": 2.7286,
+        "angle_deg": 119.76
+      },
+      {
+        "frame": 71,
+        "timestamp_s": 2.7676,
+        "angle_deg": 114.13
+      },
+      {
+        "frame": 72,
+        "timestamp_s": 2.8066,
+        "angle_deg": 113.05
+      },
+      {
+        "frame": 73,
+        "timestamp_s": 2.8456,
+        "angle_deg": 107.61
+      },
+      {
+        "frame": 74,
+        "timestamp_s": 2.8845,
+        "angle_deg": 106.3
+      },
+      {
+        "frame": 75,
+        "timestamp_s": 2.9235,
+        "angle_deg": 104.69
+      },
+      {
+        "frame": 76,
+        "timestamp_s": 2.9625,
+        "angle_deg": 96.89
+      },
+      {
+        "frame": 77,
+        "timestamp_s": 3.0015,
+        "angle_deg": 86.28
+      },
+      {
+        "frame": 78,
+        "timestamp_s": 3.0405,
+        "angle_deg": 65.02
+      },
+      {
+        "frame": 79,
+        "timestamp_s": 3.0794,
+        "angle_deg": 44.81
+      },
+      {
+        "frame": 80,
+        "timestamp_s": 3.1184,
+        "angle_deg": 34.01
+      },
+      {
+        "frame": 81,
+        "timestamp_s": 3.1574,
+        "angle_deg": 21.9
+      },
+      {
+        "frame": 82,
+        "timestamp_s": 3.1964,
+        "angle_deg": 8.7
+      },
+      {
+        "frame": 83,
+        "timestamp_s": 3.2354,
+        "angle_deg": 14.22
+      },
+      {
+        "frame": 84,
+        "timestamp_s": 3.2743,
+        "angle_deg": 18.21
+      },
+      {
+        "frame": 85,
+        "timestamp_s": 3.3133,
+        "angle_deg": 20.95
+      },
+      {
+        "frame": 86,
+        "timestamp_s": 3.3523,
+        "angle_deg": 22.61
+      },
+      {
+        "frame": 87,
+        "timestamp_s": 3.3913,
+        "angle_deg": 25.89
+      },
+      {
+        "frame": 88,
+        "timestamp_s": 3.4303,
+        "angle_deg": 31.01
+      },
+      {
+        "frame": 89,
+        "timestamp_s": 3.4692,
+        "angle_deg": 55.12
+      },
+      {
+        "frame": 90,
+        "timestamp_s": 3.5082,
+        "angle_deg": 56.06
+      },
+      {
+        "frame": 91,
+        "timestamp_s": 3.5472,
+        "angle_deg": 28.72
+      },
+      {
+        "frame": 92,
+        "timestamp_s": 3.5862,
+        "angle_deg": 28.67
+      },
+      {
+        "frame": 93,
+        "timestamp_s": 3.6252,
+        "angle_deg": 28.01
+      },
+      {
+        "frame": 94,
+        "timestamp_s": 3.6641,
+        "angle_deg": 28.84
+      },
+      {
+        "frame": 95,
+        "timestamp_s": 3.7031,
+        "angle_deg": 31.23
+      },
+      {
+        "frame": 96,
+        "timestamp_s": 3.7421,
+        "angle_deg": 31.3
+      },
+      {
+        "frame": 97,
+        "timestamp_s": 3.7811,
+        "angle_deg": 30.66
+      },
+      {
+        "frame": 98,
+        "timestamp_s": 3.8201,
+        "angle_deg": 29.58
+      },
+      {
+        "frame": 99,
+        "timestamp_s": 3.859,
+        "angle_deg": 29.45
+      },
+      {
+        "frame": 100,
+        "timestamp_s": 3.898,
+        "angle_deg": 31.7
+      },
+      {
+        "frame": 101,
+        "timestamp_s": 3.937,
+        "angle_deg": 35.72
+      },
+      {
+        "frame": 102,
+        "timestamp_s": 3.976,
+        "angle_deg": 36.27
+      },
+      {
+        "frame": 103,
+        "timestamp_s": 4.015,
+        "angle_deg": 39.0
+      },
+      {
+        "frame": 104,
+        "timestamp_s": 4.0539,
+        "angle_deg": 36.51
+      },
+      {
+        "frame": 105,
+        "timestamp_s": 4.0929,
+        "angle_deg": 35.86
+      },
+      {
+        "frame": 106,
+        "timestamp_s": 4.1319,
+        "angle_deg": 25.46
+      }
+    ],
+    "trunk_inclination": [
+      {
+        "frame": 0,
+        "timestamp_s": 0.0,
+        "angle_deg": 7.96
+      },
+      {
+        "frame": 1,
+        "timestamp_s": 0.039,
+        "angle_deg": 5.46
+      },
+      {
+        "frame": 2,
+        "timestamp_s": 0.078,
+        "angle_deg": 4.54
+      },
+      {
+        "frame": 3,
+        "timestamp_s": 0.1169,
+        "angle_deg": 0.82
+      },
+      {
+        "frame": 4,
+        "timestamp_s": 0.1559,
+        "angle_deg": 1.38
+      },
+      {
+        "frame": 5,
+        "timestamp_s": 0.1949,
+        "angle_deg": 2.01
+      },
+      {
+        "frame": 6,
+        "timestamp_s": 0.2339,
+        "angle_deg": 2.51
+      },
+      {
+        "frame": 7,
+        "timestamp_s": 0.2729,
+        "angle_deg": 3.01
+      },
+      {
+        "frame": 8,
+        "timestamp_s": 0.3118,
+        "angle_deg": 3.25
+      },
+      {
+        "frame": 9,
+        "timestamp_s": 0.3508,
+        "angle_deg": 2.86
+      },
+      {
+        "frame": 10,
+        "timestamp_s": 0.3898,
+        "angle_deg": 2.43
+      },
+      {
+        "frame": 11,
+        "timestamp_s": 0.4288,
+        "angle_deg": 3.65
+      },
+      {
+        "frame": 12,
+        "timestamp_s": 0.4678,
+        "angle_deg": 2.2
+      },
+      {
+        "frame": 13,
+        "timestamp_s": 0.5067,
+        "angle_deg": 2.7
+      },
+      {
+        "frame": 14,
+        "timestamp_s": 0.5457,
+        "angle_deg": 2.91
+      },
+      {
+        "frame": 15,
+        "timestamp_s": 0.5847,
+        "angle_deg": 2.99
+      },
+      {
+        "frame": 16,
+        "timestamp_s": 0.6237,
+        "angle_deg": 1.79
+      },
+      {
+        "frame": 17,
+        "timestamp_s": 0.6627,
+        "angle_deg": 1.64
+      },
+      {
+        "frame": 18,
+        "timestamp_s": 0.7016,
+        "angle_deg": 0.42
+      },
+      {
+        "frame": 19,
+        "timestamp_s": 0.7406,
+        "angle_deg": 0.56
+      },
+      {
+        "frame": 20,
+        "timestamp_s": 0.7796,
+        "angle_deg": 0.36
+      },
+      {
+        "frame": 21,
+        "timestamp_s": 0.8186,
+        "angle_deg": 0.53
+      },
+      {
+        "frame": 22,
+        "timestamp_s": 0.8576,
+        "angle_deg": 1.08
+      },
+      {
+        "frame": 23,
+        "timestamp_s": 0.8965,
+        "angle_deg": 0.27
+      },
+      {
+        "frame": 24,
+        "timestamp_s": 0.9355,
+        "angle_deg": 0.21
+      },
+      {
+        "frame": 25,
+        "timestamp_s": 0.9745,
+        "angle_deg": 0.53
+      },
+      {
+        "frame": 26,
+        "timestamp_s": 1.0135,
+        "angle_deg": 0.84
+      },
+      {
+        "frame": 27,
+        "timestamp_s": 1.0525,
+        "angle_deg": 3.68
+      },
+      {
+        "frame": 28,
+        "timestamp_s": 1.0914,
+        "angle_deg": 4.15
+      },
+      {
+        "frame": 29,
+        "timestamp_s": 1.1304,
+        "angle_deg": 5.83
+      },
+      {
+        "frame": 30,
+        "timestamp_s": 1.1694,
+        "angle_deg": 5.74
+      },
+      {
+        "frame": 31,
+        "timestamp_s": 1.2084,
+        "angle_deg": 5.95
+      },
+      {
+        "frame": 32,
+        "timestamp_s": 1.2474,
+        "angle_deg": 6.53
+      },
+      {
+        "frame": 33,
+        "timestamp_s": 1.2863,
+        "angle_deg": 6.38
+      },
+      {
+        "frame": 34,
+        "timestamp_s": 1.3253,
+        "angle_deg": 5.71
+      },
+      {
+        "frame": 35,
+        "timestamp_s": 1.3643,
+        "angle_deg": 7.52
+      },
+      {
+        "frame": 36,
+        "timestamp_s": 1.4033,
+        "angle_deg": 7.6
+      },
+      {
+        "frame": 37,
+        "timestamp_s": 1.4423,
+        "angle_deg": 7.78
+      },
+      {
+        "frame": 38,
+        "timestamp_s": 1.4812,
+        "angle_deg": 8.74
+      },
+      {
+        "frame": 39,
+        "timestamp_s": 1.5202,
+        "angle_deg": 11.99
+      },
+      {
+        "frame": 40,
+        "timestamp_s": 1.5592,
+        "angle_deg": 11.68
+      },
+      {
+        "frame": 41,
+        "timestamp_s": 1.5982,
+        "angle_deg": 10.98
+      },
+      {
+        "frame": 42,
+        "timestamp_s": 1.6372,
+        "angle_deg": 11.52
+      },
+      {
+        "frame": 43,
+        "timestamp_s": 1.6762,
+        "angle_deg": 12.11
+      },
+      {
+        "frame": 44,
+        "timestamp_s": 1.7151,
+        "angle_deg": 11.73
+      },
+      {
+        "frame": 45,
+        "timestamp_s": 1.7541,
+        "angle_deg": 10.83
+      },
+      {
+        "frame": 46,
+        "timestamp_s": 1.7931,
+        "angle_deg": 6.34
+      },
+      {
+        "frame": 47,
+        "timestamp_s": 1.8321,
+        "angle_deg": 3.33
+      },
+      {
+        "frame": 48,
+        "timestamp_s": 1.8711,
+        "angle_deg": 2.88
+      },
+      {
+        "frame": 49,
+        "timestamp_s": 1.91,
+        "angle_deg": 5.44
+      },
+      {
+        "frame": 50,
+        "timestamp_s": 1.949,
+        "angle_deg": 6.2
+      },
+      {
+        "frame": 51,
+        "timestamp_s": 1.988,
+        "angle_deg": 6.19
+      },
+      {
+        "frame": 52,
+        "timestamp_s": 2.027,
+        "angle_deg": 5.72
+      },
+      {
+        "frame": 53,
+        "timestamp_s": 2.066,
+        "angle_deg": 5.08
+      },
+      {
+        "frame": 54,
+        "timestamp_s": 2.1049,
+        "angle_deg": 5.19
+      },
+      {
+        "frame": 55,
+        "timestamp_s": 2.1439,
+        "angle_deg": 5.2
+      },
+      {
+        "frame": 56,
+        "timestamp_s": 2.1829,
+        "angle_deg": 5.22
+      },
+      {
+        "frame": 57,
+        "timestamp_s": 2.2219,
+        "angle_deg": 4.86
+      },
+      {
+        "frame": 58,
+        "timestamp_s": 2.2609,
+        "angle_deg": 3.84
+      },
+      {
+        "frame": 59,
+        "timestamp_s": 2.2998,
+        "angle_deg": 3.45
+      },
+      {
+        "frame": 60,
+        "timestamp_s": 2.3388,
+        "angle_deg": 5.03
+      },
+      {
+        "frame": 61,
+        "timestamp_s": 2.3778,
+        "angle_deg": 7.08
+      },
+      {
+        "frame": 62,
+        "timestamp_s": 2.4168,
+        "angle_deg": 6.89
+      },
+      {
+        "frame": 63,
+        "timestamp_s": 2.4558,
+        "angle_deg": 6.34
+      },
+      {
+        "frame": 64,
+        "timestamp_s": 2.4947,
+        "angle_deg": 5.89
+      },
+      {
+        "frame": 65,
+        "timestamp_s": 2.5337,
+        "angle_deg": 4.74
+      },
+      {
+        "frame": 66,
+        "timestamp_s": 2.5727,
+        "angle_deg": 3.79
+      },
+      {
+        "frame": 67,
+        "timestamp_s": 2.6117,
+        "angle_deg": 3.59
+      },
+      {
+        "frame": 68,
+        "timestamp_s": 2.6507,
+        "angle_deg": 3.04
+      },
+      {
+        "frame": 69,
+        "timestamp_s": 2.6896,
+        "angle_deg": 2.4
+      },
+      {
+        "frame": 70,
+        "timestamp_s": 2.7286,
+        "angle_deg": 2.65
+      },
+      {
+        "frame": 71,
+        "timestamp_s": 2.7676,
+        "angle_deg": 2.99
+      },
+      {
+        "frame": 72,
+        "timestamp_s": 2.8066,
+        "angle_deg": 2.42
+      },
+      {
+        "frame": 73,
+        "timestamp_s": 2.8456,
+        "angle_deg": 0.99
+      },
+      {
+        "frame": 74,
+        "timestamp_s": 2.8845,
+        "angle_deg": 0.63
+      },
+      {
+        "frame": 75,
+        "timestamp_s": 2.9235,
+        "angle_deg": 1.19
+      },
+      {
+        "frame": 76,
+        "timestamp_s": 2.9625,
+        "angle_deg": 3.94
+      },
+      {
+        "frame": 77,
+        "timestamp_s": 3.0015,
+        "angle_deg": 4.03
+      },
+      {
+        "frame": 78,
+        "timestamp_s": 3.0405,
+        "angle_deg": 3.74
+      },
+      {
+        "frame": 79,
+        "timestamp_s": 3.0794,
+        "angle_deg": 4.68
+      },
+      {
+        "frame": 80,
+        "timestamp_s": 3.1184,
+        "angle_deg": 2.88
+      },
+      {
+        "frame": 81,
+        "timestamp_s": 3.1574,
+        "angle_deg": 1.62
+      },
+      {
+        "frame": 82,
+        "timestamp_s": 3.1964,
+        "angle_deg": 4.85
+      },
+      {
+        "frame": 83,
+        "timestamp_s": 3.2354,
+        "angle_deg": 4.94
+      },
+      {
+        "frame": 84,
+        "timestamp_s": 3.2743,
+        "angle_deg": 6.79
+      },
+      {
+        "frame": 85,
+        "timestamp_s": 3.3133,
+        "angle_deg": 9.94
+      },
+      {
+        "frame": 86,
+        "timestamp_s": 3.3523,
+        "angle_deg": 11.51
+      },
+      {
+        "frame": 87,
+        "timestamp_s": 3.3913,
+        "angle_deg": 11.39
+      },
+      {
+        "frame": 88,
+        "timestamp_s": 3.4303,
+        "angle_deg": 8.78
+      },
+      {
+        "frame": 89,
+        "timestamp_s": 3.4692,
+        "angle_deg": 4.08
+      },
+      {
+        "frame": 90,
+        "timestamp_s": 3.5082,
+        "angle_deg": 4.18
+      },
+      {
+        "frame": 91,
+        "timestamp_s": 3.5472,
+        "angle_deg": 5.67
+      },
+      {
+        "frame": 92,
+        "timestamp_s": 3.5862,
+        "angle_deg": 4.79
+      },
+      {
+        "frame": 93,
+        "timestamp_s": 3.6252,
+        "angle_deg": 5.11
+      },
+      {
+        "frame": 94,
+        "timestamp_s": 3.6641,
+        "angle_deg": 8.0
+      },
+      {
+        "frame": 95,
+        "timestamp_s": 3.7031,
+        "angle_deg": 10.57
+      },
+      {
+        "frame": 96,
+        "timestamp_s": 3.7421,
+        "angle_deg": 13.75
+      },
+      {
+        "frame": 97,
+        "timestamp_s": 3.7811,
+        "angle_deg": 10.28
+      },
+      {
+        "frame": 98,
+        "timestamp_s": 3.8201,
+        "angle_deg": 11.5
+      },
+      {
+        "frame": 99,
+        "timestamp_s": 3.859,
+        "angle_deg": 9.57
+      },
+      {
+        "frame": 100,
+        "timestamp_s": 3.898,
+        "angle_deg": 14.03
+      },
+      {
+        "frame": 101,
+        "timestamp_s": 3.937,
+        "angle_deg": 16.32
+      },
+      {
+        "frame": 102,
+        "timestamp_s": 3.976,
+        "angle_deg": 17.93
+      },
+      {
+        "frame": 103,
+        "timestamp_s": 4.015,
+        "angle_deg": 18.95
+      },
+      {
+        "frame": 104,
+        "timestamp_s": 4.0539,
+        "angle_deg": 18.29
+      },
+      {
+        "frame": 105,
+        "timestamp_s": 4.0929,
+        "angle_deg": 18.23
+      },
+      {
+        "frame": 106,
+        "timestamp_s": 4.1319,
+        "angle_deg": 14.95
+      }
+    ]
+  }
+}
