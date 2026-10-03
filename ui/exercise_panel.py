@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 
 from exercises.registry import registry
 from services.camera import CameraService
+from services.theme import THEME
 
 
 class ExercisePanel(QWidget):
@@ -50,7 +51,7 @@ class ExercisePanel(QWidget):
 
         self.lbl_description = QLabel()
         self.lbl_description.setWordWrap(True)
-        self.lbl_description.setStyleSheet("color: #8b949e; font-size: 11px;")
+        self.lbl_description.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px;")
         ex_layout.addWidget(self.lbl_description)
         layout.addWidget(ex_group)
 
@@ -73,19 +74,19 @@ class ExercisePanel(QWidget):
         ctrl_layout = QVBoxLayout(ctrl_group)
         ctrl_layout.setSpacing(10)
 
-        self.btn_start = QPushButton("▶  Start Session")
+        self.btn_start = QPushButton("Start Session")
         self.btn_start.setObjectName("btn_start")
         self.btn_start.setMinimumHeight(40)
         self.btn_start.clicked.connect(self.start_requested.emit)
         ctrl_layout.addWidget(self.btn_start)
 
         h_ctrl = QHBoxLayout()
-        self.btn_pause = QPushButton("⏸ Pause")
+        self.btn_pause = QPushButton("Pause")
         self.btn_pause.setObjectName("btn_pause")
         self.btn_pause.clicked.connect(self.pause_requested.emit)
         self.btn_pause.setEnabled(False)
 
-        self.btn_stop = QPushButton("⏹ Stop")
+        self.btn_stop = QPushButton("Stop")
         self.btn_stop.setObjectName("btn_stop")
         self.btn_stop.clicked.connect(self.stop_requested.emit)
         self.btn_stop.setEnabled(False)
@@ -94,7 +95,7 @@ class ExercisePanel(QWidget):
         h_ctrl.addWidget(self.btn_stop)
         ctrl_layout.addLayout(h_ctrl)
 
-        self.btn_reset = QPushButton("↺  Reset Reps")
+        self.btn_reset = QPushButton("Reset Reps")
         self.btn_reset.setObjectName("btn_reset")
         self.btn_reset.clicked.connect(self.reset_requested.emit)
         ctrl_layout.addWidget(self.btn_reset)
@@ -132,4 +133,4 @@ class ExercisePanel(QWidget):
 
     def set_paused_state(self, is_paused: bool) -> None:
         """Updates pause button text."""
-        self.btn_pause.setText("▶ Resume" if is_paused else "⏸ Pause")
+        self.btn_pause.setText("Resume" if is_paused else "Pause")

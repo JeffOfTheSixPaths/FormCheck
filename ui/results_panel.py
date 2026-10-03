@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from exercises.base_exercise import ExerciseMetrics
+from services.theme import THEME
 
 
 class ResultsPanel(QWidget):
@@ -20,45 +21,53 @@ class ResultsPanel(QWidget):
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self.setFixedHeight(120)
+        self.setFixedHeight(126)
         self._init_ui()
 
     def _init_ui(self) -> None:
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setContentsMargins(12, 6, 12, 6)
         layout.setSpacing(16)
 
         # 1. Total Reps Box
-        self.card_total = self._create_stat_card("TOTAL REPS", "0", "#e6edf3")
+        self.card_total = self._create_stat_card("TOTAL REPS", "0", THEME.TEXT_PRIMARY)
         layout.addWidget(self.card_total)
 
         # 2. Perfect Reps Box
-        self.card_good = self._create_stat_card("CLEAN REPS", "0", "#00d26a")
+        self.card_good = self._create_stat_card("CLEAN REPS", "0", THEME.COLOR_SUCCESS_BRIGHT)
         layout.addWidget(self.card_good)
 
         # 3. Flawed Reps Box
-        self.card_bad = self._create_stat_card("FLAWED REPS", "0", "#ff4d4f")
+        self.card_bad = self._create_stat_card("FLAWED REPS", "0", THEME.COLOR_DANGER_BRIGHT)
         layout.addWidget(self.card_bad)
 
         # 4. Form Accuracy Box
-        self.card_accuracy = self._create_stat_card("SUCCESS RATE", "100%", "#58a6ff")
+        self.card_accuracy = self._create_stat_card("SUCCESS RATE", "100%", THEME.PRIMARY_COLOR)
         layout.addWidget(self.card_accuracy)
 
     def _create_stat_card(self, title: str, initial_value: str, color_hex: str) -> QFrame:
         card = QFrame()
         card.setStyleSheet(
-            "background-color: #161b22; border-radius: 8px; border: 1px solid #30363d;"
+            f"background-color: {THEME.BG_SURFACE}; "
+            f"border: 1px solid {THEME.BORDER_COLOR}; "
+            f"border-radius: {THEME.BORDER_RADIUS};"
         )
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(16, 10, 16, 10)
+        card_layout.setContentsMargins(16, 8, 16, 8)
         card_layout.setSpacing(2)
 
         lbl_title = QLabel(title)
-        lbl_title.setStyleSheet("color: #8b949e; font-size: 11px; font-weight: bold;")
+        lbl_title.setStyleSheet(
+            f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-weight: 700; "
+            f"font-family: {THEME.FONT_FAMILY_DISPLAY}; letter-spacing: 1.5px;"
+        )
         lbl_title.setAlignment(Qt.AlignCenter)
 
         lbl_val = QLabel(initial_value)
-        lbl_val.setStyleSheet(f"color: {color_hex}; font-size: 26px; font-weight: bold;")
+        lbl_val.setStyleSheet(
+            f"color: {color_hex}; font-size: 28px; font-weight: 800; "
+            f"font-family: {THEME.FONT_FAMILY_TECH}; letter-spacing: 2px;"
+        )
         lbl_val.setAlignment(Qt.AlignCenter)
 
         card_layout.addWidget(lbl_title)

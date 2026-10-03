@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from exercises.base_exercise import ExerciseMetrics
+from services.theme import THEME
 
 
 class FeedbackPanel(QWidget):
@@ -36,7 +37,10 @@ class FeedbackPanel(QWidget):
 
         self.lbl_score = QLabel("100%")
         self.lbl_score.setAlignment(Qt.AlignCenter)
-        self.lbl_score.setStyleSheet("font-size: 32px; font-weight: bold; color: #00d26a;")
+        self.lbl_score.setStyleSheet(
+            f"font-size: 34px; font-weight: 800; color: {THEME.COLOR_SUCCESS_BRIGHT}; "
+            f"font-family: {THEME.FONT_FAMILY_TECH}; letter-spacing: 2px;"
+        )
         score_layout.addWidget(self.lbl_score)
 
         self.bar_score = QProgressBar()
@@ -54,8 +58,9 @@ class FeedbackPanel(QWidget):
         self.lbl_phase = QLabel("IDLE")
         self.lbl_phase.setAlignment(Qt.AlignCenter)
         self.lbl_phase.setStyleSheet(
-            "background-color: #21262d; color: #58a6ff; font-size: 14px; "
-            "font-weight: bold; padding: 8px; border-radius: 6px;"
+            f"background-color: {THEME.BG_INPUT}; color: {THEME.PRIMARY_COLOR}; font-size: 13px; "
+            f"font-weight: 700; letter-spacing: 2px; padding: 8px; border-radius: {THEME.BORDER_RADIUS}; "
+            f"border: 1px solid {THEME.BORDER_COLOR}; font-family: {THEME.FONT_FAMILY_DISPLAY};"
         )
         phase_layout.addWidget(self.lbl_phase)
         layout.addWidget(phase_group)
@@ -68,8 +73,9 @@ class FeedbackPanel(QWidget):
         self.lbl_feedback = QLabel("Waiting to begin movement...")
         self.lbl_feedback.setWordWrap(True)
         self.lbl_feedback.setStyleSheet(
-            "background-color: #161b22; color: #e6edf3; font-size: 13px; "
-            "padding: 10px; border-radius: 6px; border-left: 4px solid #00d26a;"
+            f"background-color: {THEME.BG_SURFACE}; color: {THEME.TEXT_PRIMARY}; font-size: 13px; "
+            f"padding: 10px; border-radius: {THEME.BORDER_RADIUS}; border: 1px solid {THEME.BORDER_COLOR}; "
+            f"border-left: 4px solid {THEME.COLOR_SUCCESS_BRIGHT}; font-family: {THEME.FONT_FAMILY}; letter-spacing: 0.5px;"
         )
         self.fb_layout.addWidget(self.lbl_feedback)
         layout.addWidget(fb_group)
@@ -91,15 +97,18 @@ class FeedbackPanel(QWidget):
         self.bar_score.setValue(int(score))
 
         if score >= 85:
-            color = "#00d26a"  # Green
+            color = THEME.COLOR_SUCCESS_BRIGHT
         elif score >= 70:
-            color = "#f59f00"  # Orange/Amber
+            color = THEME.COLOR_WARNING
         else:
-            color = "#ff4d4f"  # Red
+            color = THEME.COLOR_DANGER_BRIGHT
 
-        self.lbl_score.setStyleSheet(f"font-size: 32px; font-weight: bold; color: {color};")
+        self.lbl_score.setStyleSheet(
+            f"font-size: 34px; font-weight: 800; color: {color}; "
+            f"font-family: {THEME.FONT_FAMILY_TECH}; letter-spacing: 2px;"
+        )
         self.bar_score.setStyleSheet(
-            f"QProgressBar::chunk {{ background-color: {color}; border-radius: 4px; }}"
+            f"QProgressBar::chunk {{ background-color: {color}; border-radius: {THEME.BORDER_RADIUS_SM}; }}"
         )
 
         # 2. Update phase
@@ -109,10 +118,11 @@ class FeedbackPanel(QWidget):
         if metrics.feedback:
             primary_cue = metrics.feedback[0]
             self.lbl_feedback.setText(primary_cue)
-            border_color = color if "Rep completed" not in primary_cue else "#00d26a"
+            border_color = color if "Rep completed" not in primary_cue else THEME.COLOR_SUCCESS_BRIGHT
             self.lbl_feedback.setStyleSheet(
-                f"background-color: #161b22; color: #e6edf3; font-size: 13px; "
-                f"padding: 10px; border-radius: 6px; border-left: 4px solid {border_color};"
+                f"background-color: {THEME.BG_SURFACE}; color: {THEME.TEXT_PRIMARY}; font-size: 13px; "
+                f"padding: 10px; border-radius: {THEME.BORDER_RADIUS}; border: 1px solid {THEME.BORDER_COLOR}; "
+                f"border-left: 4px solid {border_color}; font-family: {THEME.FONT_FAMILY}; letter-spacing: 0.5px;"
             )
         else:
             self.lbl_feedback.setText("Form looks steady.")
@@ -121,9 +131,13 @@ class FeedbackPanel(QWidget):
         for row, (name, val) in enumerate(metrics.joint_angles.items()):
             if name not in self.angle_labels:
                 lbl_name = QLabel(f"{name}:")
-                lbl_name.setStyleSheet("color: #8b949e; font-size: 12px;")
+                lbl_name.setStyleSheet(
+                    f"color: {THEME.TEXT_MUTED}; font-size: 12px; font-family: {THEME.FONT_FAMILY_DISPLAY}; letter-spacing: 0.8px;"
+                )
                 lbl_val = QLabel(f"{val:.1f}°")
-                lbl_val.setStyleSheet("color: #58a6ff; font-weight: bold; font-size: 12px;")
+                lbl_val.setStyleSheet(
+                    f"color: {THEME.PRIMARY_COLOR}; font-weight: bold; font-size: 13px; font-family: {THEME.FONT_FAMILY_TECH}; letter-spacing: 1px;"
+                )
                 self.angles_layout.addWidget(lbl_name, row, 0)
                 self.angles_layout.addWidget(lbl_val, row, 1)
                 self.angle_labels[name] = (lbl_name, lbl_val)

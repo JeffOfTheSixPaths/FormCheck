@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from services.db import db
+from services.theme import THEME
 
 
 class HistoryDialog(QDialog):
@@ -41,8 +42,11 @@ class HistoryDialog(QDialog):
 
         # Header
         header_layout = QHBoxLayout()
-        title_label = QLabel(f"🏋️‍♂️ {self.user.get('username')}'s Workout Log")
-        title_label.setStyleSheet("color: #58a6ff; font-size: 18px; font-weight: bold;")
+        title_label = QLabel(f"{self.user.get('username', 'USER').upper()}'S WORKOUT LOG")
+        title_label.setStyleSheet(
+            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_DISPLAY}; "
+            f"font-size: 18px; font-weight: 800; letter-spacing: 2px;"
+        )
         header_layout.addWidget(title_label)
         header_layout.addStretch()
 
@@ -55,10 +59,10 @@ class HistoryDialog(QDialog):
         self.stats_layout = QHBoxLayout()
         self.stats_layout.setSpacing(12)
 
-        self.card_sessions = self._create_mini_card("SESSIONS", "0", "#e6edf3")
-        self.card_clean = self._create_mini_card("CLEAN REPS", "0", "#00d26a")
-        self.card_flawed = self._create_mini_card("FLAWED REPS", "0", "#ff4d4f")
-        self.card_score = self._create_mini_card("AVG SCORE", "0%", "#58a6ff")
+        self.card_sessions = self._create_mini_card("SESSIONS", "0", THEME.TEXT_PRIMARY)
+        self.card_clean = self._create_mini_card("CLEAN REPS", "0", THEME.COLOR_SUCCESS_BRIGHT)
+        self.card_flawed = self._create_mini_card("FLAWED REPS", "0", THEME.COLOR_DANGER_BRIGHT)
+        self.card_score = self._create_mini_card("AVG SCORE", "0%", THEME.PRIMARY_COLOR)
 
         self.stats_layout.addWidget(self.card_sessions)
         self.stats_layout.addWidget(self.card_clean)
@@ -79,21 +83,25 @@ class HistoryDialog(QDialog):
         ])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setAlternatingRowColors(True)
-        self.table.setStyleSheet("""
-            QTableWidget {
-                background-color: #161b22;
-                border: 1px solid #30363d;
-                border-radius: 6px;
-                gridline-color: #21262d;
-                color: #e6edf3;
-            }
-            QHeaderView::section {
-                background-color: #21262d;
-                color: #8b949e;
+        self.table.setStyleSheet(f"""
+            QTableWidget {{
+                background-color: {THEME.BG_SURFACE};
+                border: 1px solid {THEME.BORDER_COLOR};
+                border-radius: {THEME.BORDER_RADIUS};
+                gridline-color: {THEME.BG_INPUT};
+                color: {THEME.TEXT_PRIMARY};
+                font-family: {THEME.FONT_FAMILY_TECH};
+            }}
+            QHeaderView::section {{
+                background-color: {THEME.BG_INPUT};
+                color: {THEME.TEXT_MUTED};
                 padding: 6px;
-                border: 1px solid #30363d;
-                font-weight: bold;
-            }
+                border: 1px solid {THEME.BORDER_COLOR};
+                font-family: {THEME.FONT_FAMILY_DISPLAY};
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 1px;
+            }}
         """)
         layout.addWidget(self.table)
 
@@ -108,18 +116,26 @@ class HistoryDialog(QDialog):
     def _create_mini_card(self, title: str, value: str, color_hex: str) -> QFrame:
         card = QFrame()
         card.setStyleSheet(
-            "background-color: #161b22; border-radius: 6px; border: 1px solid #30363d;"
+            f"background-color: {THEME.BG_SURFACE}; "
+            f"border: 1px solid {THEME.BORDER_COLOR}; "
+            f"border-radius: {THEME.BORDER_RADIUS};"
         )
         c_layout = QVBoxLayout(card)
         c_layout.setContentsMargins(12, 8, 12, 8)
         c_layout.setSpacing(2)
 
         lbl_t = QLabel(title)
-        lbl_t.setStyleSheet("color: #8b949e; font-size: 10px; font-weight: bold;")
+        lbl_t.setStyleSheet(
+            f"color: {THEME.TEXT_MUTED}; font-size: 10px; font-weight: 700; "
+            f"font-family: {THEME.FONT_FAMILY_DISPLAY}; letter-spacing: 1.2px;"
+        )
         lbl_t.setAlignment(Qt.AlignCenter)
 
         lbl_v = QLabel(value)
-        lbl_v.setStyleSheet(f"color: {color_hex}; font-size: 20px; font-weight: bold;")
+        lbl_v.setStyleSheet(
+            f"color: {color_hex}; font-size: 22px; font-weight: 800; "
+            f"font-family: {THEME.FONT_FAMILY_TECH}; letter-spacing: 1.5px;"
+        )
         lbl_v.setAlignment(Qt.AlignCenter)
 
         c_layout.addWidget(lbl_t)

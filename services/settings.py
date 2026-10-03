@@ -10,6 +10,9 @@ STYLESHEET_PATH = ASSETS_DIR / "styles.qss"
 DB_PATH = BASE_DIR / "formcheck.db"
 SCHEMA_PATH = BASE_DIR / "schema.sql"
 
+# UI Theme & Styling
+from services.theme import THEME
+
 # Model settings
 DEFAULT_MODEL_FILENAME = "pose_landmarker.task"
 MODEL_PATH = BASE_DIR / DEFAULT_MODEL_FILENAME

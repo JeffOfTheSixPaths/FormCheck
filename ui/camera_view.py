@@ -2,8 +2,10 @@
 
 from typing import Optional
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPixmap
+from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPixmap, QPen
 from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
+
+from services.theme import THEME
 
 
 class CameraView(QWidget):
@@ -40,7 +42,7 @@ class CameraView(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
 
         # Background
-        painter.fillRect(self.rect(), QColor("#0d1117"))
+        painter.fillRect(self.rect(), QColor(THEME.BG_BASE))
 
         if self._is_active and self._current_pixmap and not self._current_pixmap.isNull():
             # Scale pixmap maintaining aspect ratio
@@ -56,7 +58,7 @@ class CameraView(QWidget):
 
             # Draw HUD badge (FPS)
             fps_text = f"FPS: {self._fps:.1f}"
-            font = QFont("Segoe UI", 10, QFont.Bold)
+            font = QFont("Orbitron", 10, QFont.Bold)
             painter.setFont(font)
 
             # Badge background
@@ -66,15 +68,21 @@ class CameraView(QWidget):
 
             painter.setBrush(QColor(0, 0, 0, 160))
             painter.setPen(Qt.NoPen)
-            painter.drawRoundedRect(badge_rect, 6, 6)
+            painter.drawRoundedRect(badge_rect, THEME.radius_int, THEME.radius_int)
 
             # Badge text
-            painter.setPen(QColor("#00d26a"))
+            painter.setPen(QColor(THEME.COLOR_SUCCESS_BRIGHT))
             painter.drawText(badge_rect, Qt.AlignCenter, fps_text)
 
         else:
             # Draw placeholder message
-            painter.setPen(QColor("#8b949e"))
-            font = QFont("Segoe UI", 14, QFont.Medium)
+            painter.setPen(QColor(THEME.TEXT_MUTED))
+            font = QFont("Orbitron", 13, QFont.Bold)
             painter.setFont(font)
             painter.drawText(self.rect(), Qt.AlignCenter, self._placeholder_text)
+
+        # Draw solid visible outline around the camera viewport box
+        pen = QPen(QColor(THEME.BORDER_COLOR), 1)
+        painter.setPen(pen)
+        painter.setBrush(Qt.NoBrush)
+        painter.drawRoundedRect(self.rect().adjusted(0, 0, -1, -1), THEME.radius_int, THEME.radius_int)

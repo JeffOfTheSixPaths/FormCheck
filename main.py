@@ -8,6 +8,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
 from services.settings import APP_NAME, APP_TITLE, STYLESHEET_PATH
+from services.theme import get_stylesheet
 from ui.login_dialog import LoginDialog
 from ui.main_window import MainWindow
 
@@ -20,13 +21,14 @@ logger = logging.getLogger(APP_NAME)
 
 
 def load_stylesheet() -> str:
-    """Reads and returns the QSS stylesheet if present."""
-    if os.path.exists(STYLESHEET_PATH):
-        try:
+    """Reads and returns the theme-compiled QSS stylesheet."""
+    try:
+        return get_stylesheet()
+    except Exception as e:
+        logger.warning("Could not compile theme stylesheet, falling back to file: %s", e)
+        if os.path.exists(STYLESHEET_PATH):
             with open(STYLESHEET_PATH, "r", encoding="utf-8") as f:
                 return f.read()
-        except Exception as e:
-            logger.warning("Could not read stylesheet: %s", e)
     return ""
 
 
@@ -41,8 +43,13 @@ def main() -> int:
     app.setApplicationName(APP_NAME)
     app.setApplicationDisplayName(APP_TITLE)
 
-    # Set default modern font
-    font = QFont("Segoe UI", 10)
+    # Load bundled aerospace & SpaceX tech fonts (Orbitron, Rajdhani)
+    from services.theme import load_application_fonts
+    load_application_fonts()
+
+    # Set default modern technical font
+    font = QFont("Rajdhani", 11)
+    font.setStyleHint(QFont.SansSerif)
     app.setFont(font)
 
     # Apply dark mode stylesheet

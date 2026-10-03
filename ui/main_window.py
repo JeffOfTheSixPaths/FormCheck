@@ -63,12 +63,12 @@ class MainWindow(QMainWindow):
 
         account_menu.addSeparator()
 
-        self.history_action = account_menu.addAction("📊 View Workout History (SQL)...")
+        self.history_action = account_menu.addAction("View Workout History (SQL)...")
         self.history_action.triggered.connect(self._show_workout_history)
         if not self._user.get("id"):
             self.history_action.setEnabled(False)
 
-        self.switch_user_action = account_menu.addAction("🔄 Switch User / Sign In...")
+        self.switch_user_action = account_menu.addAction("Switch User / Sign In...")
         self.switch_user_action.triggered.connect(self._on_switch_user)
 
         account_menu.addSeparator()
