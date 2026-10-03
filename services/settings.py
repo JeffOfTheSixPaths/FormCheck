@@ -7,6 +7,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 ASSETS_DIR = BASE_DIR / "assets"
 STYLESHEET_PATH = ASSETS_DIR / "styles.qss"
+DB_PATH = BASE_DIR / "formcheck.db"
+SCHEMA_PATH = BASE_DIR / "schema.sql"
 
 # Model settings
 DEFAULT_MODEL_FILENAME = "pose_landmarker.task"

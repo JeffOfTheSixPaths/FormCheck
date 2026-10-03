@@ -10,14 +10,16 @@ FormCheck is organized into modular layers with strict separation of concerns:
 
 ```
 FormCheck/
-├── main.py                     # Desktop application entrypoint & Qt initialization
+├── main.py                     # Desktop application entrypoint, auth check & Qt initialization
+├── schema.sql                  # SQLite database schema (users, sessions, settings, indexes)
 ├── requirements.txt            # Python dependencies (PySide6, mediapipe, opencv-python)
 ├── pose_landmarker.task        # MediaPipe pose estimation model bundle
 ├── assets/
-│   └── styles.qss              # Modern dark-theme desktop styling
+│   └── styles.qss              # Modern dark-theme desktop styling & form inputs
 ├── services/
 │   ├── settings.py             # Global constants, paths, and hardware defaults
-│   └── camera.py               # Video capture service and device enumeration
+│   ├── camera.py               # Video capture service and device enumeration
+│   └── db.py                   # SQLite manager, PBKDF2 hashing, user auth & workout logging
 ├── pose/
 │   ├── landmarks.py            # PoseLandmark enum and skeleton connection definitions
 │   ├── detector.py             # MediaPipe PoseLandmarker wrapper and drawing overlay
@@ -33,7 +35,9 @@ FormCheck/
     ├── exercise_panel.py       # Sidebar for workout selection, camera device & session controls
     ├── feedback_panel.py       # Real-time form cues, score gauge, and joint angle telemetry
     ├── results_panel.py        # Repetition counters (clean vs flawed) and success rate
-    └── main_window.py          # QMainWindow orchestrating layouts and thread signals
+    ├── login_dialog.py         # Login, registration, and guest mode modal dialog
+    ├── history_dialog.py       # Historical workout log viewer and cumulative statistics
+    └── main_window.py          # QMainWindow orchestrating layouts, menu bar & thread signals
 ```
 
 ---

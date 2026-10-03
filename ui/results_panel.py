@@ -80,6 +80,23 @@ class ResultsPanel(QWidget):
         else:
             self.card_accuracy.val_label.setText("100%")  # type: ignore
 
+    def get_stats(self) -> dict:
+        """Returns the current repetition counts and accuracy percentage."""
+        try:
+            total = int(self.card_total.val_label.text())  # type: ignore
+            good = int(self.card_good.val_label.text())  # type: ignore
+            bad = int(self.card_bad.val_label.text())  # type: ignore
+            accuracy_str = self.card_accuracy.val_label.text().replace("%", "")  # type: ignore
+            accuracy = float(accuracy_str) if accuracy_str else 100.0
+            return {
+                "total_reps": total,
+                "clean_reps": good,
+                "flawed_reps": bad,
+                "accuracy": accuracy,
+            }
+        except Exception:
+            return {"total_reps": 0, "clean_reps": 0, "flawed_reps": 0, "accuracy": 100.0}
+
     def reset_stats(self) -> None:
         """Resets all metrics displayed."""
         self.card_total.val_label.setText("0")  # type: ignore

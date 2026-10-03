@@ -8,6 +8,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
 from services.settings import APP_NAME, APP_TITLE, STYLESHEET_PATH
+from ui.login_dialog import LoginDialog
 from ui.main_window import MainWindow
 
 # Configure root logger
@@ -49,7 +50,16 @@ def main() -> int:
     if qss:
         app.setStyleSheet(qss)
 
-    window = MainWindow()
+    # Display Login & Registration Dialog before launching main session
+    login_dialog = LoginDialog()
+    if login_dialog.exec() != LoginDialog.Accepted:
+        logger.info("Login dismissed. Exiting FormCheck.")
+        return 0
+
+    user = login_dialog.authenticated_user
+    logger.info("Launching main window for user: %s", user.get("username", "Guest"))
+
+    window = MainWindow(user=user)
     window.show()
 
     logger.info("FormCheck desktop application started.")
