@@ -1,12 +1,35 @@
+import os
+import sys
+import time
+import urllib.request
 import cv2
 import mediapipe as mp
-import time
 
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
 
-MODEL_PATH = "pose_landmarker.task"
+MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task"
+MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pose_landmarker.task")
+
+
+def ensure_model(model_path=MODEL_PATH, url=MODEL_URL):
+    """Ensures the pose estimation model file exists, downloading it if absent."""
+    if not os.path.exists(model_path):
+        print(f"Pose model not found at {model_path}.")
+        print("Downloading pose estimation model (pose_landmarker_full.task)...")
+
+        def _reporthook(count, block_size, total_size):
+            if total_size > 0:
+                percent = min(100, int(count * block_size * 100 / total_size))
+                downloaded_mb = count * block_size / (1024 * 1024)
+                total_mb = total_size / (1024 * 1024)
+                sys.stdout.write(f"\rDownloading: {percent}% ({downloaded_mb:.1f} MB / {total_mb:.1f} MB)")
+                sys.stdout.flush()
+
+        urllib.request.urlretrieve(url, model_path, reporthook=_reporthook)
+        print("\nModel downloaded successfully.")
+
 
 
 # MediaPipe's 33 pose landmarks.
@@ -76,10 +99,8 @@ def draw_pose(frame, landmarks):
             )
 
 
-import sys
-
-
-def run_camera():
+def main():
+    ensure_model(MODEL_PATH)
     print("Loading pose model...")
 
     base_options = python.BaseOptions(
