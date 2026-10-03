@@ -94,7 +94,7 @@ def main():
 
     print("Opening camera...")
 
-    camera = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture(1)
 
     if not camera.isOpened():
         print("ERROR: Could not open camera.")
