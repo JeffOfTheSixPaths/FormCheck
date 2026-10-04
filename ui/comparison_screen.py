@@ -239,6 +239,7 @@ class ComparisonScreen(QWidget):
         self._is_playing: bool = False
         self._mirror_user: bool = False
         self._mirror_pro: bool = False
+        self._torso_scale_match: bool = True
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._on_play_step)
@@ -507,7 +508,7 @@ class ComparisonScreen(QWidget):
         h_trans_top = QHBoxLayout()
         h_trans_top.setSpacing(8)
 
-        self.btn_play = QPushButton("PLAY")
+        self.btn_play = QPushButton("▶") #⏸
         self.btn_play.setFixedWidth(68)
         self.btn_play.clicked.connect(self._toggle_play)
         h_trans_top.addWidget(self.btn_play)
@@ -547,6 +548,13 @@ class ComparisonScreen(QWidget):
         self.chk_mirror_pro.setStyleSheet(f"color: {THEME.PRIMARY_COLOR}; font-size: 11px; font-weight: 600;")
         self.chk_mirror_pro.toggled.connect(self._on_chk_pro_mirror_toggled)
         h_trans_top.addWidget(self.chk_mirror_pro)
+
+        self.chk_torso_scale = QCheckBox("Torso Match")
+        self.chk_torso_scale.setChecked(True)
+        self.chk_torso_scale.setToolTip("Scale the smaller athlete to match the other in torso size for equivalent anatomical comparison")
+        self.chk_torso_scale.setStyleSheet(f"color: {THEME.COLOR_WARNING}; font-size: 11px; font-weight: 600;")
+        self.chk_torso_scale.toggled.connect(self._render_current_frame)
+        h_trans_top.addWidget(self.chk_torso_scale)
 
         h_trans_top.addStretch()
 
@@ -942,7 +950,7 @@ class ComparisonScreen(QWidget):
 
     def _toggle_play(self) -> None:
         self._is_playing = not self._is_playing
-        self.btn_play.setText("PAUSE" if self._is_playing else "PLAY")
+        self.btn_play.setText("⏸" if self._is_playing else "▶")
         if self._is_playing:
             self._timer.start(40)  # ~25 fps
         else:
@@ -1144,15 +1152,78 @@ class ComparisonScreen(QWidget):
             u_disp = user_frame.copy() if user_frame is not None else None
             p_disp = pro_frame.copy() if pro_frame is not None else None
 
+            u_pts_split = {}
+            p_pts_split = {}
+
+            # If Torso Match is enabled, scale whichever athlete is smaller to match the other in size
+            if self.chk_torso_scale.isChecked() and u_disp is not None and p_disp is not None and user_lm and pro_lm:
+                u_torso = comparison_engine.get_torso_length(user_lm)
+                p_torso = comparison_engine.get_torso_length(pro_lm)
+                if u_torso and p_torso and u_torso > 0.01 and p_torso > 0.01:
+                    u_torso_px = u_torso * u_disp.shape[0]
+                    p_torso_px = p_torso * p_disp.shape[0]
+
+                    if p_torso_px > u_torso_px * 1.04:
+                        # User is smaller: scale user video up to match pro torso size
+                        zoom = min(2.5, float(p_torso_px / u_torso_px))
+                        u_h, u_w = u_disp.shape[:2]
+                        sho_pts = [user_lm[k] for k in [11, 12] if k < len(user_lm)]
+                        hip_pts = [user_lm[k] for k in [23, 24] if k < len(user_lm)]
+                        all_pts = sho_pts + hip_pts
+                        cx = float(np.mean([p["x"] if isinstance(p, dict) else p.x for p in all_pts])) * u_w if all_pts else u_w / 2.0
+                        cy = float(np.mean([p["y"] if isinstance(p, dict) else p.y for p in all_pts])) * u_h if all_pts else u_h / 2.0
+
+                        crop_w = int(u_w / zoom)
+                        crop_h = int(u_h / zoom)
+                        x1 = max(0, min(u_w - crop_w, int(cx - crop_w / 2.0)))
+                        y1 = max(0, min(u_h - crop_h, int(cy - crop_h / 2.0)))
+                        cropped = u_disp[y1:y1 + crop_h, x1:x1 + crop_w]
+                        u_disp = cv2.resize(cropped, (u_w, u_h), interpolation=cv2.INTER_LINEAR)
+
+                        scale_x = float(u_w) / crop_w
+                        scale_y = float(u_h) / crop_h
+                        for idx, lm in enumerate(user_lm):
+                            lx = float(lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0))
+                            ly = float(lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0))
+                            nx = int((lx * u_w - x1) * scale_x)
+                            ny = int((ly * u_h - y1) * scale_y)
+                            u_pts_split[idx] = (nx, ny)
+
+                    elif u_torso_px > p_torso_px * 1.04:
+                        # Pro is smaller: scale pro video up to match user torso size
+                        zoom = min(2.5, float(u_torso_px / p_torso_px))
+                        p_h, p_w = p_disp.shape[:2]
+                        sho_pts = [pro_lm[k] for k in [11, 12] if k < len(pro_lm)]
+                        hip_pts = [pro_lm[k] for k in [23, 24] if k < len(pro_lm)]
+                        all_pts = sho_pts + hip_pts
+                        cx = float(np.mean([p["x"] if isinstance(p, dict) else p.x for p in all_pts])) * p_w if all_pts else p_w / 2.0
+                        cy = float(np.mean([p["y"] if isinstance(p, dict) else p.y for p in all_pts])) * p_h if all_pts else p_h / 2.0
+
+                        crop_w = int(p_w / zoom)
+                        crop_h = int(p_h / zoom)
+                        x1 = max(0, min(p_w - crop_w, int(cx - crop_w / 2.0)))
+                        y1 = max(0, min(p_h - crop_h, int(cy - crop_h / 2.0)))
+                        cropped = p_disp[y1:y1 + crop_h, x1:x1 + crop_w]
+                        p_disp = cv2.resize(cropped, (p_w, p_h), interpolation=cv2.INTER_LINEAR)
+
+                        scale_x = float(p_w) / crop_w
+                        scale_y = float(p_h) / crop_h
+                        for idx, lm in enumerate(pro_lm):
+                            lx = float(lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0))
+                            ly = float(lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0))
+                            nx = int((lx * p_w - x1) * scale_x)
+                            ny = int((ly * p_h - y1) * scale_y)
+                            p_pts_split[idx] = (nx, ny)
+
             if u_disp is not None:
                 if user_lm:
-                    pts_u = {}
-                    for idx, lm in enumerate(user_lm):
-                        lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
-                        ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
-                        pts_u[idx] = (int(lx * u_disp.shape[1]), int(ly * u_disp.shape[0]))
-                    comparison_engine._draw_skeleton_lines(u_disp, pts_u, (94, 63, 244), 3)
-                    for pt in pts_u.values():
+                    if not u_pts_split:
+                        for idx, lm in enumerate(user_lm):
+                            lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
+                            ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
+                            u_pts_split[idx] = (int(lx * u_disp.shape[1]), int(ly * u_disp.shape[0]))
+                    comparison_engine._draw_skeleton_lines(u_disp, u_pts_split, (94, 63, 244), 3)
+                    for pt in u_pts_split.values():
                         cv2.circle(u_disp, pt, 4, (94, 63, 244), -1, cv2.LINE_AA)
 
                 # Top-left badge on user video
@@ -1163,13 +1234,13 @@ class ComparisonScreen(QWidget):
 
             if p_disp is not None:
                 if pro_lm:
-                    pts_p = {}
-                    for idx, lm in enumerate(pro_lm):
-                        lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
-                        ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
-                        pts_p[idx] = (int(lx * p_disp.shape[1]), int(ly * p_disp.shape[0]))
-                    comparison_engine._draw_skeleton_lines(p_disp, pts_p, (255, 240, 0), 3)
-                    for pt in pts_p.values():
+                    if not p_pts_split:
+                        for idx, lm in enumerate(pro_lm):
+                            lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
+                            ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
+                            p_pts_split[idx] = (int(lx * p_disp.shape[1]), int(ly * p_disp.shape[0]))
+                    comparison_engine._draw_skeleton_lines(p_disp, p_pts_split, (255, 240, 0), 3)
+                    for pt in p_pts_split.values():
                         cv2.circle(p_disp, pt, 4, (255, 240, 0), -1, cv2.LINE_AA)
 
                 # Top-left badge on pro video

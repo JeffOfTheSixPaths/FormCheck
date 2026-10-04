@@ -200,7 +200,7 @@ class ExercisePanel(QWidget):
 
         h_ctrl = QHBoxLayout()
         h_ctrl.setSpacing(8)
-        self.btn_pause = QPushButton("PAUSE")
+        self.btn_pause = QPushButton("⏸")
         self.btn_pause.setObjectName("btn_pause")
         self.btn_pause.setMinimumHeight(42)
         self.btn_pause.clicked.connect(self.pause_requested.emit)
@@ -365,4 +365,4 @@ class ExercisePanel(QWidget):
 
     def set_paused_state(self, is_paused: bool) -> None:
         """Updates pause button text."""
-        self.btn_pause.setText("RESUME" if is_paused else "PAUSE")
+        self.btn_pause.setText("▶" if is_paused else "⏸")
