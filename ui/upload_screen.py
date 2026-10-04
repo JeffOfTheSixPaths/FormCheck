@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QDialog,
     QFileDialog,
@@ -25,8 +26,11 @@ from PySide6.QtWidgets import (
 )
 
 from services.camera import CameraService
+from services.geometry_cache import geometry_cache
+from services.pro_similarity_service import pro_similarity_service
 from services.theme import THEME
 from services.video_service import video_service
+from ui.pro_recommendation_dialog import ProRecommendationDialog
 
 logger = logging.getLogger(__name__)
 
@@ -167,6 +171,8 @@ class UploadVideoModal(QDialog):
         self.setWindowTitle("Upload Athletic Video to Server")
         self.resize(500, 480)
         self._selected_path: Optional[str] = None
+        self.uploaded_record: Optional[Dict[str, Any]] = None
+        self.pro_report: Optional[Any] = None
         self._init_ui()
 
     def _init_ui(self) -> None:
@@ -281,7 +287,35 @@ class UploadVideoModal(QDialog):
         )
 
         if ok:
-            QMessageBox.information(self, "Upload Success", msg)
+            dest_file = record.get("file_path") if record else self._selected_path
+            self.uploaded_record = record
+
+            # 1. Pre-compute and save geometry to server storage (instant O(1) overlay without real-time model lag)
+            self.btn_upload.setEnabled(False)
+            self.btn_upload.setText("PRE-COMPUTING SKELETAL GEOMETRY...")
+            QApplication.processEvents()
+            try:
+                geometry_cache.get_or_compute_geometry(dest_file)
+            except Exception as e:
+                logger.error(f"Error caching geometry: {e}")
+
+            # 2. Run AI pro athlete matchmaker to find closest pro form match
+            self.btn_upload.setText("AI PRO MATCHMAKING...")
+            QApplication.processEvents()
+            try:
+                self.pro_report = pro_similarity_service.recommend_pro_athlete(dest_file, sport=sport)
+            except Exception as e:
+                logger.error(f"Error calculating pro recommendation: {e}")
+
+            best_name = self.pro_report.best_match.pro_name if (self.pro_report and self.pro_report.best_match) else None
+            if best_name:
+                QMessageBox.information(
+                    self,
+                    "Upload & Biomechanical Analysis Complete",
+                    f"{msg}\n\nAI Matchmaker Result:\nOkay, you look like {best_name}!"
+                )
+            else:
+                QMessageBox.information(self, "Upload Success", msg)
             self.accept()
         else:
             QMessageBox.critical(self, "Upload Failed", msg)
@@ -453,6 +487,18 @@ class UploadScreen(QWidget):
         modal = UploadVideoModal(user_id=user_id, parent=self)
         if modal.exec() == QDialog.Accepted:
             self.refresh_library()
+            if modal.pro_report and modal.pro_report.best_match:
+                rec_dialog = ProRecommendationDialog(modal.pro_report, parent=self)
+                rec_dialog.compare_requested.connect(
+                    lambda u_path, p_path: self.open_comparison_requested.emit(u_path, p_path)
+                )
+                rec_dialog.load_pro_requested.connect(
+                    lambda p_path: self.open_comparison_requested.emit(
+                        modal.uploaded_record.get("file_path", "") if modal.uploaded_record else "",
+                        p_path,
+                    )
+                )
+                rec_dialog.exec()
 
     def _on_tab_changed(self, idx: int) -> None:
         self.refresh_library()

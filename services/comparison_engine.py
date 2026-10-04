@@ -233,70 +233,88 @@ class ComparisonEngine:
         pro_landmarks: Optional[List],
         user_landmarks: Optional[List],
         metrics: Optional[ComparisonMetrics] = None,
+        pro_label: str = "REFERENCE BENCHMARK",
+        user_label: str = "YOUR ATHLETIC FORM",
     ) -> np.ndarray:
         """
-        Renders the Pro skeleton and User skeleton directly onto the same frame.
-        Pro skeleton: Neon Cyan (#00f0ff)
+        Renders the Reference/Pro skeleton and User skeleton directly onto the same frame.
+        Anchored centrally Right Shoulder to Right Shoulder (Landmark 12) with proportional torso scaling.
+        Pro/Ref skeleton: Neon Cyan (#00f0ff)
         User skeleton: Normalized in scale & center, rendered in Coral Rose (#f43f5e)
         Disparity vectors: Orange/red connecting lines highlighting form breaks.
         """
         canvas = base_frame.copy()
         h, w = canvas.shape[:2]
 
-        # 1. Draw Pro Skeleton (Neon Cyan)
+        def _get_coords(lm):
+            if isinstance(lm, dict):
+                vis = lm.get("visibility", lm.get("v", 1.0))
+                if vis is None or vis > 0.30:
+                    return float(lm["x"] * w), float(lm["y"] * h)
+            elif lm is not None:
+                vis = getattr(lm, "visibility", 1.0)
+                if vis is None or vis > 0.30:
+                    return float(lm.x * w), float(lm.y * h)
+            return None
+
+        # 1. Draw Reference/Pro Skeleton (Neon Cyan)
         pro_pts = {}
         if pro_landmarks:
             for idx, lm in enumerate(pro_landmarks):
-                vis = getattr(lm, "visibility", 1.0)
-                if vis is None or vis > 0.4:
-                    px = int(lm.x * w)
-                    py = int(lm.y * h)
-                    pro_pts[idx] = (px, py)
+                coords = _get_coords(lm)
+                if coords:
+                    pro_pts[idx] = (int(coords[0]), int(coords[1]))
 
             cls._draw_skeleton_lines(canvas, pro_pts, color_bgr=(255, 240, 0), thickness=3)
             for pt in pro_pts.values():
                 cv2.circle(canvas, pt, 5, (255, 240, 0), -1, cv2.LINE_AA)
 
-        # 2. Normalize and Draw User Skeleton (Coral Rose)
+        # 2. Normalize and Draw User Skeleton (Coral Rose) anchored Right Shoulder to Right Shoulder
         user_pts = {}
         if user_landmarks:
             raw_user_pts = {}
             for idx, lm in enumerate(user_landmarks):
-                vis = getattr(lm, "visibility", 1.0)
-                if vis is None or vis > 0.4:
-                    raw_user_pts[idx] = (lm.x * w, lm.y * h)
+                coords = _get_coords(lm)
+                if coords:
+                    raw_user_pts[idx] = coords
 
-            # Spatial Alignment: Align user hip center and scale to pro hip center & torso length
-            if pro_pts and 23 in pro_pts and 24 in pro_pts and 11 in pro_pts and 12 in pro_pts:
-                p_hip = (
-                    (pro_pts[23][0] + pro_pts[24][0]) / 2.0,
-                    (pro_pts[23][1] + pro_pts[24][1]) / 2.0,
-                )
-                p_sho = (
-                    (pro_pts[11][0] + pro_pts[12][0]) / 2.0,
-                    (pro_pts[11][1] + pro_pts[12][1]) / 2.0,
-                )
-                pro_torso = np.hypot(p_sho[0] - p_hip[0], p_sho[1] - p_hip[1])
+            # Right Shoulder to Right Shoulder Central Anchor (Landmark 12)
+            if pro_pts and 12 in pro_pts and 12 in raw_user_pts:
+                p_r_sho = pro_pts[12]
+                u_r_sho = raw_user_pts[12]
 
-                if 23 in raw_user_pts and 24 in raw_user_pts and 11 in raw_user_pts and 12 in raw_user_pts:
-                    u_hip = (
-                        (raw_user_pts[23][0] + raw_user_pts[24][0]) / 2.0,
-                        (raw_user_pts[23][1] + raw_user_pts[24][1]) / 2.0,
-                    )
-                    u_sho = (
-                        (raw_user_pts[11][0] + raw_user_pts[12][0]) / 2.0,
-                        (raw_user_pts[11][1] + raw_user_pts[12][1]) / 2.0,
-                    )
-                    user_torso = np.hypot(u_sho[0] - u_hip[0], u_sho[1] - u_hip[1])
-                    scale = (pro_torso / user_torso) if user_torso > 10 else 1.0
+                # Compute anatomical scale factor from torso (right shoulder to right hip 12 -> 24)
+                scale = 1.0
+                if 24 in pro_pts and 24 in raw_user_pts:
+                    p_torso = np.hypot(p_r_sho[0] - pro_pts[24][0], p_r_sho[1] - pro_pts[24][1])
+                    u_torso = np.hypot(u_r_sho[0] - raw_user_pts[24][0], u_r_sho[1] - raw_user_pts[24][1])
+                    if u_torso > 12:
+                        scale = max(0.5, min(2.0, p_torso / u_torso))
+                elif 11 in pro_pts and 11 in raw_user_pts:
+                    p_span = np.hypot(p_r_sho[0] - pro_pts[11][0], p_r_sho[1] - pro_pts[11][1])
+                    u_span = np.hypot(u_r_sho[0] - raw_user_pts[11][0], u_r_sho[1] - raw_user_pts[11][1])
+                    if u_span > 12:
+                        scale = max(0.5, min(2.0, p_span / u_span))
 
-                    for idx, (ux, uy) in raw_user_pts.items():
-                        norm_x = int(p_hip[0] + (ux - u_hip[0]) * scale)
-                        norm_y = int(p_hip[1] + (uy - u_hip[1]) * scale)
-                        user_pts[idx] = (norm_x, norm_y)
-                else:
-                    for idx, (ux, uy) in raw_user_pts.items():
-                        user_pts[idx] = (int(ux), int(uy))
+                for idx, (ux, uy) in raw_user_pts.items():
+                    norm_x = int(p_r_sho[0] + (ux - u_r_sho[0]) * scale)
+                    norm_y = int(p_r_sho[1] + (uy - u_r_sho[1]) * scale)
+                    user_pts[idx] = (norm_x, norm_y)
+
+            elif pro_pts and 11 in pro_pts and 11 in raw_user_pts:
+                # Fallback to Left Shoulder anchor (Landmark 11)
+                p_l_sho = pro_pts[11]
+                u_l_sho = raw_user_pts[11]
+                scale = 1.0
+                if 23 in pro_pts and 23 in raw_user_pts:
+                    p_torso = np.hypot(p_l_sho[0] - pro_pts[23][0], p_l_sho[1] - pro_pts[23][1])
+                    u_torso = np.hypot(u_l_sho[0] - raw_user_pts[23][0], u_l_sho[1] - raw_user_pts[23][1])
+                    if u_torso > 12:
+                        scale = max(0.5, min(2.0, p_torso / u_torso))
+                for idx, (ux, uy) in raw_user_pts.items():
+                    norm_x = int(p_l_sho[0] + (ux - u_l_sho[0]) * scale)
+                    norm_y = int(p_l_sho[1] + (uy - u_l_sho[1]) * scale)
+                    user_pts[idx] = (norm_x, norm_y)
             else:
                 for idx, (ux, uy) in raw_user_pts.items():
                     user_pts[idx] = (int(ux), int(uy))
@@ -320,13 +338,13 @@ class ComparisonEngine:
         cv2.rectangle(canvas, (16, 16), (280, 72), (9, 9, 11), -1)
         cv2.rectangle(canvas, (16, 16), (280, 72), (50, 50, 56), 1)
 
-        # Pro legend line
+        # Ref legend line
         cv2.line(canvas, (28, 36), (56, 36), (255, 240, 0), 3)
-        cv2.putText(canvas, "PRO ATHLETE FORM", (66, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (255, 240, 0), 1, cv2.LINE_AA)
+        cv2.putText(canvas, pro_label, (66, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (255, 240, 0), 1, cv2.LINE_AA)
 
         # User legend line
         cv2.line(canvas, (28, 54), (56, 54), (94, 63, 244), 3)
-        cv2.putText(canvas, "YOUR ATHLETIC FORM", (66, 58), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (94, 63, 244), 1, cv2.LINE_AA)
+        cv2.putText(canvas, user_label, (66, 58), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (94, 63, 244), 1, cv2.LINE_AA)
 
         return canvas
 

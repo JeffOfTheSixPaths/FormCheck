@@ -9,8 +9,10 @@ import numpy as np
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
+    QApplication,
     QButtonGroup,
     QComboBox,
+    QFileDialog,
     QFrame,
     QGridLayout,
     QGroupBox,
@@ -29,8 +31,11 @@ from PySide6.QtWidgets import (
 )
 
 from services.comparison_engine import ComparisonMetrics, comparison_engine
+from services.geometry_cache import geometry_cache
+from services.pro_similarity_service import pro_similarity_service
 from services.theme import THEME
 from services.video_service import video_service
+from ui.pro_recommendation_dialog import ProRecommendationDialog
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +90,7 @@ class ComparisonViewport(QWidget):
                 oy = (self.height() - scaled.height()) // 2
                 painter.drawPixmap(ox, oy, scaled)
             else:
-                self._draw_placeholder(painter, "SELECT USER AND PRO ATHLETE VIDEOS TO RUN DIRECT OVERLAY")
+                self._draw_placeholder(painter, "SELECT USER AND REFERENCE VIDEOS TO RUN DIRECT OVERLAY")
 
         elif self._mode == "split":
             half_w = (self.width() - 8) // 2
@@ -116,14 +121,14 @@ class ComparisonViewport(QWidget):
                 py = right_rect.y() + (right_rect.height() - scaled_p.height()) // 2
                 painter.drawPixmap(px, py, scaled_p)
 
-                # Label Pro
+                # Label Reference Benchmark
                 painter.setPen(QColor(THEME.PRIMARY_COLOR))
                 painter.setFont(QFont("Orbitron", 10, QFont.Bold))
-                painter.drawText(px + 12, py + 24, "PRO ATHLETE BENCHMARK")
+                painter.drawText(px + 12, py + 24, "REFERENCE BENCHMARK")
             else:
                 painter.fillRect(right_rect, QColor(THEME.BG_SURFACE))
                 painter.setPen(QColor(THEME.TEXT_MUTED))
-                painter.drawText(right_rect, Qt.AlignCenter, "NO PRO VIDEO LOADED")
+                painter.drawText(right_rect, Qt.AlignCenter, "NO REFERENCE VIDEO LOADED")
 
             # Divider line
             painter.setPen(QPen(QColor(THEME.BORDER_COLOR), 1))
@@ -228,6 +233,9 @@ class ComparisonScreen(QWidget):
         self._user_path: Optional[str] = None
         self._pro_path: Optional[str] = None
 
+        self._user_geometry: Optional[Dict[str, Any]] = None
+        self._pro_geometry: Optional[Dict[str, Any]] = None
+
         self._user_total_frames: int = 0
         self._pro_total_frames: int = 0
         self._max_frames: int = 0
@@ -245,7 +253,7 @@ class ComparisonScreen(QWidget):
         self._populate_vault_dropdowns()
 
     def load_user_video(self, file_path: str) -> None:
-        """Loads personal / user athlete video."""
+        """Loads personal / user athlete video and pre-computed skeletal geometry."""
         if not Path(file_path).exists():
             return
         self._user_path = file_path
@@ -253,12 +261,27 @@ class ComparisonScreen(QWidget):
             self._user_cap.release()
         self._user_cap = cv2.VideoCapture(file_path)
         self._user_total_frames = int(self._user_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        # Retrieve or pre-compute saved geometry for video
+        self._user_geometry = geometry_cache.get_or_compute_geometry(file_path)
+        if self._user_geometry and self._user_geometry.get("total_frames"):
+            self._user_total_frames = max(self._user_total_frames, self._user_geometry["total_frames"])
+
         self.lbl_user_loaded.setText(f"Loaded: {Path(file_path).name} ({self._user_total_frames} frames)")
+
+        # Sync combo if present
+        for i in range(self.combo_user_vault.count()):
+            if self.combo_user_vault.itemData(i) == file_path:
+                self.combo_user_vault.blockSignals(True)
+                self.combo_user_vault.setCurrentIndex(i)
+                self.combo_user_vault.blockSignals(False)
+                break
+
         self._update_timeline_bounds()
         self._render_current_frame()
 
     def load_pro_video(self, file_path: str) -> None:
-        """Loads professional athlete reference video."""
+        """Loads comparison reference video and pre-computed skeletal geometry."""
         if not Path(file_path).exists():
             return
         self._pro_path = file_path
@@ -266,7 +289,22 @@ class ComparisonScreen(QWidget):
             self._pro_cap.release()
         self._pro_cap = cv2.VideoCapture(file_path)
         self._pro_total_frames = int(self._pro_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        # Retrieve or pre-compute saved geometry for reference video
+        self._pro_geometry = geometry_cache.get_or_compute_geometry(file_path)
+        if self._pro_geometry and self._pro_geometry.get("total_frames"):
+            self._pro_total_frames = max(self._pro_total_frames, self._pro_geometry["total_frames"])
+
         self.lbl_pro_loaded.setText(f"Loaded: {Path(file_path).name} ({self._pro_total_frames} frames)")
+
+        # Sync combo if present
+        for i in range(self.combo_pro_vault.count()):
+            if self.combo_pro_vault.itemData(i) == file_path:
+                self.combo_pro_vault.blockSignals(True)
+                self.combo_pro_vault.setCurrentIndex(i)
+                self.combo_pro_vault.blockSignals(False)
+                break
+
         self._update_timeline_bounds()
         self._render_current_frame()
 
@@ -306,14 +344,14 @@ class ComparisonScreen(QWidget):
 
         main_layout.addWidget(top_bar)
 
-        # 2. Dual Video Loading Bar (User Video on Left | Pro Video on Right)
+        # 2. Dual Video Loading Bar (User Video on Left | AI Pro Match in Center | Pro Video on Right)
         loaders_frame = QFrame()
         loaders_frame.setStyleSheet(
             f"background-color: {THEME.BG_SURFACE}; border: 1px solid {THEME.BORDER_COLOR}; "
             f"border-radius: {THEME.BORDER_RADIUS}; padding: 10px 14px;"
         )
         lf_layout = QHBoxLayout(loaders_frame)
-        lf_layout.setSpacing(16)
+        lf_layout.setSpacing(14)
 
         # 2A. User Video Slot
         v_user = QVBoxLayout()
@@ -338,18 +376,53 @@ class ComparisonScreen(QWidget):
         self.lbl_user_loaded = QLabel("No user video loaded")
         self.lbl_user_loaded.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px;")
         v_user.addWidget(self.lbl_user_loaded)
-        lf_layout.addLayout(v_user, stretch=1)
+        lf_layout.addLayout(v_user, stretch=5)
 
-        # Divider
-        v_div = QFrame()
-        v_div.setFrameShape(QFrame.VLine)
-        v_div.setStyleSheet(f"color: {THEME.BORDER_COLOR};")
-        lf_layout.addWidget(v_div)
+        # Center AI Matchmaker Column
+        v_div1 = QFrame()
+        v_div1.setFrameShape(QFrame.VLine)
+        v_div1.setStyleSheet(f"color: {THEME.BORDER_COLOR};")
+        lf_layout.addWidget(v_div1)
 
-        # 2B. Pro Video Slot
+        v_ai_match = QVBoxLayout()
+        v_ai_match.setAlignment(Qt.AlignCenter)
+        v_ai_match.setSpacing(4)
+
+        lbl_ai_hdr = QLabel("AI FORM BENCHMARK")
+        lbl_ai_hdr.setStyleSheet(
+            f"color: {THEME.COLOR_WARNING}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 10px; font-weight: 800; letter-spacing: 0.8px;"
+        )
+        lbl_ai_hdr.setAlignment(Qt.AlignCenter)
+        v_ai_match.addWidget(lbl_ai_hdr)
+
+        self.btn_find_pro = QPushButton("AI PRO MATCH")
+        self.btn_find_pro.setToolTip("Calculate appendage angle variance cosine similarity and find your closest professional athlete form match")
+        self.btn_find_pro.setMinimumHeight(36)
+        self.btn_find_pro.setStyleSheet(
+            f"QPushButton {{ background-color: {THEME.COLOR_WARNING}; color: #09090b; "
+            f"font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; "
+            f"border-radius: {THEME.BORDER_RADIUS_SM}; padding: 6px 14px; border: none; }} "
+            f"QPushButton:hover {{ background-color: {THEME.COLOR_SUCCESS_BRIGHT}; }}"
+        )
+        self.btn_find_pro.clicked.connect(self._on_find_closest_pro)
+        v_ai_match.addWidget(self.btn_find_pro)
+
+        lbl_ai_sub = QLabel("Appendage Variance + Waveform")
+        lbl_ai_sub.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 9px;")
+        lbl_ai_sub.setAlignment(Qt.AlignCenter)
+        v_ai_match.addWidget(lbl_ai_sub)
+
+        lf_layout.addLayout(v_ai_match, stretch=0)
+
+        v_div2 = QFrame()
+        v_div2.setFrameShape(QFrame.VLine)
+        v_div2.setStyleSheet(f"color: {THEME.BORDER_COLOR};")
+        lf_layout.addWidget(v_div2)
+
+        # 2B. Reference / Comparison Video Slot
         v_pro = QVBoxLayout()
         v_pro.setSpacing(6)
-        lbl_p_title = QLabel("2. PRO ATHLETE BENCHMARK (LOCAL / ONLINE ARCHIVE):")
+        lbl_p_title = QLabel("2. REFERENCE VIDEO TO COMPARE (LOCAL / VAULT):")
         lbl_p_title.setStyleSheet(
             f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800;"
         )
@@ -361,15 +434,15 @@ class ComparisonScreen(QWidget):
         h_p_btns.addWidget(btn_p_local)
 
         self.combo_pro_vault = QComboBox()
-        self.combo_pro_vault.addItem("-- Choose from Pro Archive --", "")
+        self.combo_pro_vault.addItem("-- Choose Reference from Vault --", "")
         self.combo_pro_vault.currentIndexChanged.connect(self._on_pro_vault_selected)
         h_p_btns.addWidget(self.combo_pro_vault)
         v_pro.addLayout(h_p_btns)
 
-        self.lbl_pro_loaded = QLabel("No pro video loaded")
+        self.lbl_pro_loaded = QLabel("No reference video loaded")
         self.lbl_pro_loaded.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px;")
         v_pro.addWidget(self.lbl_pro_loaded)
-        lf_layout.addLayout(v_pro, stretch=1)
+        lf_layout.addLayout(v_pro, stretch=5)
 
         main_layout.addWidget(loaders_frame)
 
@@ -474,7 +547,7 @@ class ComparisonScreen(QWidget):
         sb_layout.setSpacing(4)
         sb_layout.setAlignment(Qt.AlignCenter)
 
-        lbl_match_title = QLabel("OVERALL PRO FORM MATCH")
+        lbl_match_title = QLabel("OVERALL FORM MATCH")
         lbl_match_title.setStyleSheet(
             f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 1.2px;"
         )
@@ -548,13 +621,13 @@ class ComparisonScreen(QWidget):
             self.combo_user_vault.addItem(f"[{cat}] {v.get('title')} ({v.get('sport')})", v.get("file_path"))
         self.combo_user_vault.blockSignals(False)
 
-        # Pro dropdown
+        # Reference comparison dropdown (lists all vault videos freely)
         self.combo_pro_vault.blockSignals(True)
         self.combo_pro_vault.clear()
-        self.combo_pro_vault.addItem("-- Choose from Pro Archive --", "")
-        pro_vids = video_service.get_library(category="pro")
-        for v in pro_vids:
-            self.combo_pro_vault.addItem(f"[PRO] {v.get('title')} ({v.get('sport')})", v.get("file_path"))
+        self.combo_pro_vault.addItem("-- Choose Reference from Vault --", "")
+        all_vids = video_service.get_library(category=None, user_id=self._user.get("id"))
+        for v in all_vids:
+            self.combo_pro_vault.addItem(f"{v.get('title')} ({v.get('sport')})", v.get("file_path"))
         self.combo_pro_vault.blockSignals(False)
 
     def _on_browse_user_local(self) -> None:
@@ -576,6 +649,48 @@ class ComparisonScreen(QWidget):
         p = self.combo_pro_vault.currentData()
         if p:
             self.load_pro_video(p)
+
+    def _on_find_closest_pro(self) -> None:
+        """Runs appendage angle variance vector cosine similarity & dynamic waveform congruence to recommend the closest pro athlete."""
+        if not self._user_path or not Path(self._user_path).exists():
+            reply = QMessageBox.question(
+                self,
+                "Select User Movement Video",
+                "No personal movement video loaded yet.\nWould you like to select a video to compare?",
+                QMessageBox.Yes | QMessageBox.No,
+            )
+            if reply == QMessageBox.Yes:
+                self._on_browse_user_local()
+                if not self._user_path or not Path(self._user_path).exists():
+                    return
+            else:
+                return
+
+        prev_label = self.lbl_user_loaded.text()
+        self.lbl_user_loaded.setText("Analyzing 16-joint variance vectors & kinetic sequencing...")
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        report = None
+        try:
+            report = pro_similarity_service.recommend_pro_athlete(self._user_path)
+        except Exception as e:
+            logger.exception("Pro recommendation failed")
+            QMessageBox.critical(self, "Analysis Error", f"Failed to analyze movement kinematics:\n{e}")
+            return
+        finally:
+            QApplication.restoreOverrideCursor()
+            self.lbl_user_loaded.setText(prev_label)
+
+        if not report or not report.best_match:
+            QMessageBox.information(
+                self,
+                "Insufficient Pose Landmarks",
+                "Could not detect clear human skeletal landmarks across enough frames in the video.\n"
+                "Please verify that the athlete is fully visible in the frame."
+            )
+            return
+
+        dialog = ProRecommendationDialog(report, on_load_pro=self.load_pro_video, parent=self)
+        dialog.exec()
 
     def _update_timeline_bounds(self) -> None:
         self._max_frames = max(self._user_total_frames, self._pro_total_frames)
@@ -635,12 +750,28 @@ class ComparisonScreen(QWidget):
             if s_p:
                 pro_frame = f_p
 
-        # Pose Detection & Kinematic Calculation
-        user_lm = comparison_engine.extract_landmarks(user_frame) if user_frame is not None else None
-        pro_lm = comparison_engine.extract_landmarks(pro_frame) if pro_frame is not None else None
+        # Retrieve pre-computed skeletal geometry saved on video (no real-time model inference lag)
+        user_lm = None
+        user_angles = {}
+        if self._user_geometry and "frames" in self._user_geometry:
+            uf = self._user_geometry["frames"]
+            if 0 <= user_idx < len(uf):
+                user_lm = uf[user_idx].get("landmarks")
+                user_angles = uf[user_idx].get("angles", {})
+        elif user_frame is not None:
+            user_lm = comparison_engine.extract_landmarks(user_frame)
+            user_angles = comparison_engine.calculate_angles(user_lm) if user_lm else {}
 
-        user_angles = comparison_engine.calculate_angles(user_lm) if user_lm else {}
-        pro_angles = comparison_engine.calculate_angles(pro_lm) if pro_lm else {}
+        pro_lm = None
+        pro_angles = {}
+        if self._pro_geometry and "frames" in self._pro_geometry:
+            pf = self._pro_geometry["frames"]
+            if 0 <= pro_idx < len(pf):
+                pro_lm = pf[pro_idx].get("landmarks")
+                pro_angles = pf[pro_idx].get("angles", {})
+        elif pro_frame is not None:
+            pro_lm = comparison_engine.extract_landmarks(pro_frame)
+            pro_angles = comparison_engine.calculate_angles(pro_lm) if pro_lm else {}
 
         # Compute Variances across Arms, Shoulders, Hips, Legs
         metrics = comparison_engine.compute_variances(user_angles, pro_angles)
@@ -674,18 +805,32 @@ class ComparisonScreen(QWidget):
 
         self.lbl_coaching_cue.setText(metrics.primary_coaching_cue)
 
-        # Render Viewport
+        # Render Viewport (Direct overlay anchored Right Shoulder to Right Shoulder)
         if self.radio_overlay.isChecked():
             base = pro_frame if pro_frame is not None else user_frame
             if base is not None:
-                overlay_canvas = comparison_engine.render_direct_overlay(base, pro_lm, user_lm, metrics)
+                overlay_canvas = comparison_engine.render_direct_overlay(
+                    base, pro_lm, user_lm, metrics,
+                    pro_label="REFERENCE BENCHMARK",
+                    user_label="YOUR ATHLETIC FORM"
+                )
                 self.viewport.set_overlay_frame(overlay_canvas)
         else:
             # Draw individual skeletons for split view
             u_disp = user_frame.copy() if user_frame is not None else None
             p_disp = pro_frame.copy() if pro_frame is not None else None
             if u_disp is not None and user_lm:
-                comparison_engine._draw_skeleton_lines(u_disp, {idx: (int(lm.x * u_disp.shape[1]), int(lm.y * u_disp.shape[0])) for idx, lm in enumerate(user_lm)}, (94, 63, 244), 2)
+                pts_u = {}
+                for idx, lm in enumerate(user_lm):
+                    lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
+                    ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
+                    pts_u[idx] = (int(lx * u_disp.shape[1]), int(ly * u_disp.shape[0]))
+                comparison_engine._draw_skeleton_lines(u_disp, pts_u, (94, 63, 244), 2)
             if p_disp is not None and pro_lm:
-                comparison_engine._draw_skeleton_lines(p_disp, {idx: (int(lm.x * p_disp.shape[1]), int(lm.y * p_disp.shape[0])) for idx, lm in enumerate(pro_lm)}, (255, 240, 0), 2)
+                pts_p = {}
+                for idx, lm in enumerate(pro_lm):
+                    lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
+                    ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
+                    pts_p[idx] = (int(lx * p_disp.shape[1]), int(ly * p_disp.shape[0]))
+                comparison_engine._draw_skeleton_lines(p_disp, pts_p, (255, 240, 0), 2)
             self.viewport.set_split_frames(u_disp, p_disp)

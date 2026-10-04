@@ -14,6 +14,7 @@ from exercises.registry import registry
 from pose.detector import PoseDetector
 from services.camera import CameraService
 from services.settings import (
+    BASE_DIR,
     CAMERA_HEIGHT,
     CAMERA_WIDTH,
     DEFAULT_CAMERA_INDEX,
@@ -29,6 +30,7 @@ class PoseWorker(QThread):
     status_message = Signal(str)
     error_occurred = Signal(str)
     video_finished = Signal()
+    recording_saved = Signal(str, str, float)  # file_path, exercise_name, duration_seconds
 
     def __init__(
         self,
@@ -50,6 +52,12 @@ class PoseWorker(QThread):
         self._camera_service: Optional[CameraService] = None
         self._detector: Optional[PoseDetector] = None
         self._exercise: Optional[BaseExercise] = None
+
+        # Movement Recording to Server
+        self._is_recording: bool = False
+        self._recording_path: Optional[str] = None
+        self._recording_writer: Optional[cv2.VideoWriter] = None
+        self._recording_frame_count: int = 0
 
     def set_exercise(self, name: str) -> None:
         """Safely switches the active exercise analyzer."""
@@ -97,6 +105,12 @@ class PoseWorker(QThread):
         with QMutexLocker(self._mutex):
             self._is_paused = not self._is_paused
             return self._is_paused
+
+    def enable_recording(self, enabled: bool = True, output_path: Optional[str] = None) -> None:
+        """Enables frame-by-frame recording of the athletic movement to server storage."""
+        with QMutexLocker(self._mutex):
+            self._is_recording = enabled
+            self._recording_path = output_path
 
     def stop(self) -> None:
         """Stops the worker thread safely."""
@@ -199,6 +213,25 @@ class PoseWorker(QThread):
                     joint_highlights=metrics.joint_highlights,
                 )
 
+            # Write frame to video recording writer if enabled
+            with QMutexLocker(self._mutex):
+                is_rec = self._is_recording
+                rec_path = self._recording_path
+
+            if is_rec:
+                if self._recording_writer is None:
+                    if not rec_path:
+                        staging_dir = BASE_DIR / "server_storage" / "staging"
+                        staging_dir.mkdir(parents=True, exist_ok=True)
+                        rec_path = str(staging_dir / f"drill_rec_{int(time.time() * 1000)}.mp4")
+                        self._recording_path = rec_path
+                    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                    self._recording_writer = cv2.VideoWriter(rec_path, fourcc, 25.0, (w, h))
+
+                if self._recording_writer and self._recording_writer.isOpened():
+                    self._recording_writer.write(frame)
+                    self._recording_frame_count += 1
+
             # Convert BGR frame to QImage for Qt UI display
             h, w, ch = frame.shape
             bytes_per_line = ch * w
@@ -215,7 +248,15 @@ class PoseWorker(QThread):
                 if sleep_remainder > 0:
                     time.sleep(sleep_remainder)
 
-        # Cleanup
+        # Cleanup & Finalize Recording
+        if self._recording_writer is not None:
+            self._recording_writer.release()
+            self._recording_writer = None
+            duration_rec = self._recording_frame_count / 25.0
+            if self._recording_path and self._recording_frame_count > 0:
+                logger.info("Saved movement recording to: %s (%d frames)", self._recording_path, self._recording_frame_count)
+                self.recording_saved.emit(self._recording_path, self._exercise_name, duration_rec)
+
         if self._camera_service:
             self._camera_service.release()
         if self._detector:

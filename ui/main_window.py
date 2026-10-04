@@ -27,10 +27,12 @@ from services.db import db
 from services.settings import (
     APP_NAME,
     APP_TITLE,
+    BASE_DIR,
     WINDOW_DEFAULT_HEIGHT,
     WINDOW_DEFAULT_WIDTH,
 )
 from services.theme import THEME
+from services.video_service import video_service
 from ui.camera_view import CameraView
 from ui.comparison_screen import ComparisonScreen
 from ui.editor_screen import EditorScreen
@@ -381,9 +383,13 @@ class MainWindow(QMainWindow):
         self.editor_screen.load_video(video_path)
         self.set_active_screen(self.SCREEN_EDITOR)
 
-    def _open_in_comparison(self, video_path: str, category: str) -> None:
+    def _open_in_comparison(self, video_path: str, category_or_ref_path: str) -> None:
         """Loads video into appropriate slot of Comparison screen and navigates there."""
-        if category == "pro":
+        if category_or_ref_path and Path(category_or_ref_path).exists():
+            # Dual loading: (user_video_path, pro_ref_video_path)
+            self.comparison_screen.load_user_video(video_path)
+            self.comparison_screen.load_pro_video(category_or_ref_path)
+        elif category_or_ref_path == "pro":
             self.comparison_screen.load_pro_video(video_path)
         else:
             self.comparison_screen.load_user_video(video_path)
@@ -468,10 +474,22 @@ class MainWindow(QMainWindow):
             loop_video=loop,
         )
 
+        # Movement Recording: Auto-save session to server vault if enabled
+        if self.exercise_panel.is_recording_enabled():
+            staging_dir = BASE_DIR / "server_storage" / "temp_recordings"
+            staging_dir.mkdir(parents=True, exist_ok=True)
+            stamp = int(time.time())
+            slug = self._selected_exercise.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("/", "_")
+            rec_filename = f"rec_{slug}_{stamp}.mp4"
+            rec_path = str(staging_dir / rec_filename)
+            self._worker.enable_recording(True, rec_path)
+            self.exercise_panel.set_recording_status(True, "● RECORDING MOVEMENT TO SERVER...")
+
         self._worker.frame_ready.connect(self._on_frame_ready)
         self._worker.status_message.connect(self._update_status_bar)
         self._worker.error_occurred.connect(self._on_worker_error)
         self._worker.video_finished.connect(self._on_video_finished)
+        self._worker.recording_saved.connect(self._on_recording_saved)
 
         self._worker.start()
         self.exercise_panel.set_session_running(True)
@@ -493,6 +511,7 @@ class MainWindow(QMainWindow):
 
         self.exercise_panel.set_session_running(False)
         self.exercise_panel.set_paused_state(False)
+        self.exercise_panel.set_recording_status(False, "Ready to record")
 
         info = self.exercise_panel.get_current_source_info()
         if info["mode"] == "video" and info["name"]:
@@ -522,6 +541,64 @@ class MainWindow(QMainWindow):
                 return
 
         self._update_status_bar("Drill session terminated.")
+
+    def _on_recording_saved(self, temp_path: str, exercise_name: str, duration: float) -> None:
+        """Uploads auto-recorded drill movement to server vault and offers pro similarity recommendation."""
+        if not Path(temp_path).exists():
+            return
+
+        user_id = self._user.get("id")
+        sport_category = "General"
+        ex_lower = exercise_name.lower()
+        if any(w in ex_lower for w in ["baseball", "pitch", "bat", "field"]):
+            sport_category = "Baseball"
+        elif any(w in ex_lower for w in ["volleyball", "spike", "approach", "hit", "pass", "set"]):
+            sport_category = "Volleyball"
+
+        title = f"{exercise_name} ({time.strftime('%b %d, %H:%M')})"
+        try:
+            uploaded = video_service.upload_video(
+                source_path=temp_path,
+                title=title,
+                sport=sport_category,
+                movement_type=exercise_name,
+                category="personal",
+                user_id=user_id,
+                notes=f"Auto-recorded drill session duration {duration:.1f}s",
+            )
+        except Exception as e:
+            logger.exception("Failed to save movement recording to server vault: %s", e)
+            return
+
+        # Refresh dropdowns on upload and comparison screens
+        self.comparison_screen.set_user(self._user)
+        self.upload_screen.set_user(self._user)
+
+        self._update_status_bar(f"Movement saved to Server Vault: {uploaded['title']}")
+
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Movement Saved // AI Pro Match")
+        msg.setText(
+            f"<b>MOVEMENT RECORDING SAVED TO SERVER VAULT</b><br><br>"
+            f"<b>Drill:</b> {exercise_name}<br>"
+            f"<b>Duration:</b> {duration:.1f}s<br>"
+            f"<b>Server Vault File:</b> <code>server_storage/personal/{Path(uploaded['file_path']).name}</code><br><br>"
+            f"Would you like to analyze your 16-joint angular variance vectors and find which professional athlete you are closest to?"
+        )
+        btn_match = msg.addButton("FIND CLOSEST PRO", QMessageBox.AcceptRole)
+        btn_compare = msg.addButton("OPEN IN COMPARISON", QMessageBox.ActionRole)
+        btn_dismiss = msg.addButton("DISMISS", QMessageBox.RejectRole)
+        msg.setDefaultButton(btn_match)
+        msg.exec()
+
+        clicked = msg.clickedButton()
+        if clicked == btn_match:
+            self.set_active_screen(self.SCREEN_COMPARE)
+            self.comparison_screen.load_user_video(uploaded["file_path"])
+            self.comparison_screen._on_find_closest_pro()
+        elif clicked == btn_compare:
+            self.set_active_screen(self.SCREEN_COMPARE)
+            self.comparison_screen.load_user_video(uploaded["file_path"])
 
     def _on_reset_session(self) -> None:
         if self._worker:

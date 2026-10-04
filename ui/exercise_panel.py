@@ -176,6 +176,22 @@ class ExercisePanel(QWidget):
         ctrl_layout.setSizeConstraint(QVBoxLayout.SetMinimumSize)
         ctrl_layout.setSpacing(10)
 
+        # Recording Options
+        self.chk_auto_record = QCheckBox("Record Movement to Server Vault")
+        self.chk_auto_record.setChecked(True)
+        self.chk_auto_record.setStyleSheet(
+            f"QCheckBox {{ color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_TECH}; "
+            f"font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 2px 0; }}"
+        )
+        ctrl_layout.addWidget(self.chk_auto_record)
+
+        self.lbl_record_status = QLabel("● SERVER AUTO-ARCHIVE READY")
+        self.lbl_record_status.setStyleSheet(
+            f"color: {THEME.TEXT_MUTED}; font-family: {THEME.FONT_FAMILY_TECH}; "
+            f"font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding-left: 2px;"
+        )
+        ctrl_layout.addWidget(self.lbl_record_status)
+
         self.btn_start = QPushButton("START DRILL")
         self.btn_start.setObjectName("btn_start")
         self.btn_start.setMinimumHeight(52)
@@ -303,6 +319,25 @@ class ExercisePanel(QWidget):
                 "name": f"Sensor Device {idx}",
             }
 
+    def is_recording_enabled(self) -> bool:
+        """Checks if movement recording to server is active."""
+        return self.chk_auto_record.isChecked()
+
+    def set_recording_status(self, is_recording: bool, text: Optional[str] = None) -> None:
+        """Updates recording indicator status."""
+        if text:
+            self.lbl_record_status.setText(text)
+        elif is_recording:
+            self.lbl_record_status.setText("● RECORDING MOVEMENT TO SERVER...")
+        else:
+            self.lbl_record_status.setText("● SERVER AUTO-ARCHIVE READY")
+
+        color = THEME.COLOR_DANGER_BRIGHT if is_recording else THEME.TEXT_MUTED
+        self.lbl_record_status.setStyleSheet(
+            f"color: {color}; font-family: {THEME.FONT_FAMILY_TECH}; "
+            f"font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding-left: 2px;"
+        )
+
     def set_session_running(self, running: bool) -> None:
         """Updates button states according to active session state."""
         self.btn_start.setEnabled(not running)
@@ -313,6 +348,20 @@ class ExercisePanel(QWidget):
         self.btn_select_video.setEnabled(not running)
         self.combo_speed.setEnabled(not running)
         self.chk_loop.setEnabled(not running)
+        self.chk_auto_record.setEnabled(not running)
+
+        if running and self.chk_auto_record.isChecked():
+            self.lbl_record_status.setText("● RECORDING MOVEMENT TO SERVER...")
+            self.lbl_record_status.setStyleSheet(
+                f"color: {THEME.COLOR_DANGER_BRIGHT}; font-family: {THEME.FONT_FAMILY_TECH}; "
+                f"font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding-left: 2px;"
+            )
+        else:
+            self.lbl_record_status.setText("● SERVER AUTO-ARCHIVE READY")
+            self.lbl_record_status.setStyleSheet(
+                f"color: {THEME.TEXT_MUTED}; font-family: {THEME.FONT_FAMILY_TECH}; "
+                f"font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding-left: 2px;"
+            )
 
     def set_paused_state(self, is_paused: bool) -> None:
         """Updates pause button text."""
