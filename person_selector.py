@@ -3,12 +3,20 @@ Person selection module: Allows interactive or automatic selection of a specific
 person in the video before running pose estimation and tracking.
 """
 
+from pathlib import Path
 from typing import List, Optional, Tuple
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from mediapipe.tasks.python.components.containers import landmark as mp_landmark
 import numpy as np
+
+try:
+    from services.settings import MODEL_PATH
+    DEFAULT_MODEL_PATH = str(MODEL_PATH)
+except Exception:
+    DEFAULT_MODEL_PATH = "pose_landmarker.task"
 
 
 class PersonSelector:
@@ -18,49 +26,125 @@ class PersonSelector:
 
     def __init__(
         self,
-        model_path: str = "pose_landmarker.task",
-        min_detection_confidence: float = 0.5,
+        model_path: Optional[str] = None,
+        min_detection_confidence: float = 0.15,
     ):
-        self.model_path = model_path
+        self.model_path = model_path or DEFAULT_MODEL_PATH
         self.min_detection_confidence = min_detection_confidence
 
         base_options = python.BaseOptions(model_asset_path=self.model_path)
         self.options = vision.PoseLandmarkerOptions(
             base_options=base_options,
             running_mode=vision.RunningMode.IMAGE,
-            num_poses=6,
+            num_poses=4,
             min_pose_detection_confidence=min_detection_confidence,
+            min_pose_presence_confidence=min_detection_confidence,
+            min_tracking_confidence=min_detection_confidence,
         )
+        self._landmarker: Optional[vision.PoseLandmarker] = None
+
+    def _get_landmarker(self) -> vision.PoseLandmarker:
+        if self._landmarker is None:
+            self._landmarker = vision.PoseLandmarker.create_from_options(self.options)
+        return self._landmarker
 
     def detect_people_in_frame(
         self, frame: np.ndarray
     ) -> List[Tuple[Tuple[int, int, int, int], List]]:
         """
-        Detects all people in the frame.
-        Returns a list of tuples: ((x, y, w, h), landmarks)
+        Detects all people in the frame using multi-scale tiled detection and spatial deduplication.
+        Returns a list of tuples: ((x, y, w, h), landmarks) sorted left-to-right across the scene.
         """
+        if frame is None or frame.size == 0:
+            return []
+
         h, w = frame.shape[:2]
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        landmarker = self._get_landmarker()
 
-        results = []
-        with vision.PoseLandmarker.create_from_options(self.options) as landmarker:
-            det = landmarker.detect(mp_image)
-            if det.pose_landmarks:
+        # Multi-scale overlapping tiles across the width of the frame
+        # Tile 0: Full frame (for close-up or foreground athletes)
+        # Tiles 1-5: Overlapping vertical slices allowing high-resolution detection of distant athletes
+        if w >= 640:
+            tiles = [
+                (0, w, 0, h),
+                (0, int(w * 0.35), 0, h),
+                (int(w * 0.15), int(w * 0.55), 0, h),
+                (int(w * 0.35), int(w * 0.75), 0, h),
+                (int(w * 0.55), int(w * 0.85), 0, h),
+                (int(w * 0.70), w, 0, h),
+            ]
+        else:
+            tiles = [(0, w, 0, h)]
+
+        candidates = []
+        for x1, x2, y1, y2 in tiles:
+            crop = frame[y1:y2, x1:x2]
+            if crop.size == 0:
+                continue
+            cw = x2 - x1
+            ch = y2 - y1
+            rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+            try:
+                det = landmarker.detect(mp_image)
+            except Exception:
+                continue
+
+            if det and det.pose_landmarks:
                 for lms in det.pose_landmarks:
-                    xs = [lm.x * w for lm in lms if getattr(lm, "visibility", 1.0) > 0.25]
-                    ys = [lm.y * h for lm in lms if getattr(lm, "visibility", 1.0) > 0.25]
+                    # Convert crop normalized coordinates back to full frame pixel coords
+                    xs = [x1 + int(lm.x * cw) for lm in lms if getattr(lm, "visibility", 1.0) > 0.15]
+                    ys = [y1 + int(lm.y * ch) for lm in lms if getattr(lm, "visibility", 1.0) > 0.15]
                     if len(xs) >= 8:
-                        x1 = max(0, int(min(xs) - 15))
-                        y1 = max(0, int(min(ys) - 25))
-                        x2 = min(w, int(max(xs) + 15))
-                        y2 = min(h, int(max(ys) + 20))
-                        bbox = (x1, y1, max(1, x2 - x1), max(1, y2 - y1))
-                        results.append((bbox, lms))
+                        bx = max(0, min(xs) - 15)
+                        by = max(0, min(ys) - 20)
+                        bw = min(w - bx, max(xs) - min(xs) + 30)
+                        bh = min(h - by, max(ys) - min(ys) + 30)
+                        # Keep plausible human dimensions and filter out tiny background artifacts
+                        if bh >= 80 and (bw * bh) >= 6000:
+                            # Re-project landmarks to full-frame normalized coords so canvas can use them
+                            full_lms = []
+                            for lm in lms:
+                                fx = (x1 + lm.x * cw) / w
+                                fy = (y1 + lm.y * ch) / h
+                                full_lms.append(
+                                    mp_landmark.NormalizedLandmark(
+                                        x=float(fx),
+                                        y=float(fy),
+                                        z=float(lm.z),
+                                        visibility=float(getattr(lm, "visibility", 1.0)),
+                                        presence=float(getattr(lm, "presence", 1.0)),
+                                    )
+                                )
+                            candidates.append(((int(bx), int(by), int(bw), int(bh)), full_lms))
 
-        # Sort by area descending (largest person first)
-        results.sort(key=lambda item: item[0][2] * item[0][3], reverse=True)
-        return results
+        # Non-Maximum Suppression (IoU) to eliminate duplicates across overlapping tiles
+        def _iou(boxA, boxB):
+            xA = max(boxA[0], boxB[0])
+            yA = max(boxA[1], boxB[1])
+            xB = min(boxA[0] + boxA[2], boxB[0] + boxB[2])
+            yB = min(boxA[1] + boxA[3], boxB[1] + boxB[3])
+            inter = max(0, xB - xA) * max(0, yB - yA)
+            areaA = boxA[2] * boxA[3]
+            areaB = boxB[2] * boxB[3]
+            return inter / float(areaA + areaB - inter + 1e-6)
+
+        # Prioritize larger/clearer detections
+        candidates.sort(key=lambda item: item[0][2] * item[0][3], reverse=True)
+        kept = []
+        for item in candidates:
+            box = item[0]
+            overlap = False
+            for k in kept:
+                if _iou(box, k[0]) > 0.25:
+                    overlap = True
+                    break
+            if not overlap:
+                kept.append(item)
+
+        # Sort spatially from left to right across the scene (by x-coordinate)
+        kept.sort(key=lambda item: item[0][0])
+        return kept
 
     def select_person_interactive(
         self,

@@ -350,6 +350,18 @@ class ComparisonScreen(QWidget):
         )
         btn_u_local.clicked.connect(self._on_browse_user_local)
         h_u_hdr.addWidget(btn_u_local)
+
+        btn_u_target = QPushButton("CHOOSE ATHLETE")
+        btn_u_target.setToolTip("Click on which person to track in this video")
+        btn_u_target.setStyleSheet(
+            f"QPushButton {{ background-color: {THEME.BG_INPUT}; color: {THEME.PRIMARY_COLOR}; "
+            f"font-size: 10px; font-weight: 700; border: 1px solid {THEME.PRIMARY_COLOR}; "
+            f"border-radius: {THEME.BORDER_RADIUS_SM}; padding: 3px 8px; }} "
+            f"QPushButton:hover {{ background-color: {THEME.PRIMARY_COLOR}; color: #09090b; }}"
+        )
+        btn_u_target.clicked.connect(self._on_choose_user_athlete)
+        h_u_hdr.addWidget(btn_u_target)
+
         v_user.addLayout(h_u_hdr)
 
         self.combo_user_vault = QComboBox()
@@ -783,6 +795,28 @@ class ComparisonScreen(QWidget):
         p = self.combo_user_vault.currentData()
         if p:
             self.load_user_video(p)
+
+    def _on_choose_user_athlete(self) -> None:
+        if not self._user_path or not Path(self._user_path).exists():
+            QMessageBox.warning(self, "No Video Loaded", "Please select or browse a user video first.")
+            return
+        from ui.person_selector_widget import PersonSelectionDialog
+        dlg = PersonSelectionDialog(self._user_path, parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            bbox, start_frame = dlg.get_selection()
+            if bbox:
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                try:
+                    self._user_geometry = geometry_cache.get_or_compute_geometry(
+                        self._user_path,
+                        initial_bbox=bbox,
+                        start_frame=start_frame,
+                        force_recompute=True,
+                    )
+                    self.lbl_user_loaded.setText(f"Tracked: Athlete (F{start_frame+1}) - {Path(self._user_path).name}")
+                    self._render_current_frame()
+                finally:
+                    QApplication.restoreOverrideCursor()
 
     def _on_browse_pro_local(self) -> None:
         p, _ = QFileDialog.getOpenFileName(self, "Select Pro Athlete Reference", "", "Video Files (*.mp4 *.mov *.avi *.mkv)")
