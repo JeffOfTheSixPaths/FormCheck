@@ -20,10 +20,10 @@ MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pos
 
 # Application metadata
 APP_NAME = "FormCheck"
-APP_TITLE = "FormCheck - Real-Time AI Exercise Form Analyzer"
+APP_TITLE = "FormCheck Pro - Athlete Biomechanics & Kinetic Telemetry"
 APP_VERSION = "1.0.0"
-WINDOW_DEFAULT_WIDTH = 1280
-WINDOW_DEFAULT_HEIGHT = 800
+WINDOW_DEFAULT_WIDTH = 1360
+WINDOW_DEFAULT_HEIGHT = 860
 
 # Camera defaults
 DEFAULT_CAMERA_INDEX = 0

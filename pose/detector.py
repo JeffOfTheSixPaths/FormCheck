@@ -71,9 +71,14 @@ class PoseDetector:
         )
 
         self._landmarker = vision.PoseLandmarker.create_from_options(options)
+        self._last_timestamp_ms = 0
 
     def detect(self, rgb_frame: np.ndarray, timestamp_ms: int) -> Any:
         """Runs pose estimation on an RGB frame at the given timestamp."""
+        if timestamp_ms <= self._last_timestamp_ms:
+            timestamp_ms = self._last_timestamp_ms + 1
+        self._last_timestamp_ms = timestamp_ms
+
         mp_image = mp.Image(
             image_format=mp.ImageFormat.SRGB,
             data=rgb_frame,

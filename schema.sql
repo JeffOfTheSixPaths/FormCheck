@@ -69,7 +69,33 @@ CREATE TABLE IF NOT EXISTS user_settings (
 );
 
 -- ------------------------------------------------------------------------------
--- 4. TRIGGERS
+-- 4. UPLOADED_VIDEOS TABLE
+-- Stores uploaded professional athlete archive and personal user videos.
+-- category: 'pro' (professional archive), 'personal' (user-uploaded), or 'both'
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS uploaded_videos (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id           INTEGER,
+    title             TEXT NOT NULL,
+    category          TEXT NOT NULL CHECK (category IN ('pro', 'personal', 'both')),
+    sport             TEXT NOT NULL DEFAULT 'General',
+    file_path         TEXT NOT NULL,
+    thumbnail_path    TEXT,
+    fps               REAL DEFAULT 30.0,
+    total_frames      INTEGER DEFAULT 0,
+    duration_seconds  REAL DEFAULT 0.0,
+    resolution        TEXT DEFAULT '1920x1080',
+    description       TEXT,
+    uploaded_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_videos_category ON uploaded_videos(category);
+CREATE INDEX IF NOT EXISTS idx_videos_user_id ON uploaded_videos(user_id);
+CREATE INDEX IF NOT EXISTS idx_videos_sport ON uploaded_videos(sport);
+
+-- ------------------------------------------------------------------------------
+-- 5. TRIGGERS
 -- Automatically update the updated_at timestamp on row modification.
 -- ------------------------------------------------------------------------------
 CREATE TRIGGER IF NOT EXISTS trg_users_updated_at

@@ -1,6 +1,7 @@
 """
 Reporter module: Generates terminal tables, JSON reports, CSV time-series exports,
-and publication-quality kinematic angle graphs with expected value and variance bands.
+and publication-quality kinematic angle graphs with expected value and variance bands
+across every adjacent appendage.
 """
 
 import csv
@@ -16,7 +17,8 @@ from kinematics import JointStats, KinematicTracker
 
 class KinematicReporter:
     """
-    Produces formatted statistical summaries and visual graphs of joint angle kinematics.
+    Produces formatted statistical summaries and visual graphs of joint angle kinematics
+    and variances between every adjacent appendage.
     """
 
     def __init__(self, kinematic_tracker: KinematicTracker, video_metadata: dict):
@@ -26,9 +28,9 @@ class KinematicReporter:
 
     def print_terminal_summary(self):
         """Prints a clean, formatted ASCII table of kinematic statistics to the console."""
-        print("\n" + "=" * 94)
-        print("                           FORMCHECK KINEMATICS ANALYSIS REPORT                           ")
-        print("=" * 94)
+        print("\n" + "=" * 106)
+        print("               FORMCHECK KINEMATICS REPORT: ALL ADJACENT APPENDAGE VARIANCES              ")
+        print("=" * 106)
         print(f" Video Source: {self.metadata.get('video_path', 'Unknown')}")
         print(
             f" Duration: {self.metadata.get('duration_s', 0):.2f}s | "
@@ -36,52 +38,36 @@ class KinematicReporter:
             f" FPS: {self.metadata.get('fps', 0):.1f} | "
             f" Resolution: {self.metadata.get('resolution', 'Unknown')}"
         )
-        print("-" * 94)
+        print("-" * 106)
         print(
-            f"{'Joint Name':<32} | {'Count':<5} | {'E[Angle] (Mean)':<15} | {'Variance (σ²)':<14} | {'Std Dev (σ)':<11} | {'ROM (Min-Max)':<16}"
+            f"{'Adjacent Appendage Joint':<34} | {'Cat':<10} | {'E[X] (Mean)':<12} | {'Variance (σ²)':<14} | {'Std Dev (σ)':<11} | {'ROM (Min-Max)':<16}"
         )
-        print("-" * 94)
+        print("-" * 106)
 
         if not self.stats:
             print(" No valid pose landmarks detected.")
         else:
-            # Highlight Lower body (Femur, Shin, Hip) first
-            priority_order = [
-                "left_knee",
-                "right_knee",
-                "left_hip",
-                "right_hip",
-                "left_ankle",
-                "right_ankle",
-                "left_pelvis_femur",
-                "right_pelvis_femur",
-                "trunk_inclination",
-                "left_elbow",
-                "right_elbow",
-                "left_shoulder",
-                "right_shoulder",
-            ]
+            categories = ["Lower Body", "Upper Body", "Core & Head"]
+            for cat in categories:
+                cat_items = [s for s in self.stats.values() if s.category == cat]
+                if not cat_items:
+                    continue
 
-            keys = [k for k in priority_order if k in self.stats]
-            for k in self.stats:
-                if k not in keys:
-                    keys.append(k)
+                print(f" --- {cat.upper()} APPENDAGES ---")
+                for s in cat_items:
+                    mean_str = f"{s.expected_value:5.1f}°"
+                    var_str = f"{s.variance:6.1f}°²"
+                    std_str = f"{s.std_dev:5.1f}°"
+                    rom_str = f"{s.range_of_motion:4.1f}° ({s.min_angle:.0f}°-{s.max_angle:.0f}°)"
 
-            for key in keys:
-                s = self.stats[key]
-                mean_str = f"{s.expected_value:6.2f}°"
-                var_str = f"{s.variance:7.2f}°²"
-                std_str = f"{s.std_dev:5.2f}°"
-                rom_str = f"{s.range_of_motion:4.1f}° ({s.min_angle:.0f}°-{s.max_angle:.0f}°)"
+                    print(
+                        f" {s.name:<33} | {s.category:<10} | {mean_str:<12} | {var_str:<14} | {std_str:<11} | {rom_str:<16}"
+                    )
 
-                print(
-                    f" {s.name:<31} | {s.count:<5} | {mean_str:<15} | {var_str:<14} | {std_str:<11} | {rom_str:<16}"
-                )
-
-        print("=" * 94)
-        print(" Note: Expected Value (E[X]) represents average joint angle during movement.")
-        print("       Variance (Var[X]) indicates the dispersion/spread of joint excursions.")
-        print("=" * 94 + "\n")
+        print("=" * 106)
+        print(" Note: Expected Value (E[X]) represents average joint angle across observed frames.")
+        print("       Variance (Var[X] = σ²) represents the spread/dispersion between adjacent segments.")
+        print("=" * 106 + "\n")
 
     def save_json(self, output_path: str):
         """Exports complete statistics and frame-by-frame time-series to JSON."""
@@ -91,6 +77,7 @@ class KinematicReporter:
         for key, s in self.stats.items():
             summary_data[key] = {
                 "name": s.name,
+                "category": s.category,
                 "sample_count": s.count,
                 "expected_value_deg": round(s.expected_value, 3),
                 "variance_deg2": round(s.variance, 3),
@@ -129,7 +116,6 @@ class KinematicReporter:
         """Exports joint angles over time in tabular CSV format."""
         os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
 
-        # Collect unique frames
         all_frames = set()
         frame_timestamps = {}
         for series in self.tracker.history.values():
@@ -140,7 +126,6 @@ class KinematicReporter:
         sorted_frames = sorted(list(all_frames))
         joint_keys = list(self.tracker.history.keys())
 
-        # Map: frame -> key -> angle
         frame_joint_map = {f: {} for f in sorted_frames}
         for key, series in self.tracker.history.items():
             for f_idx, _, ang in series:
@@ -162,114 +147,114 @@ class KinematicReporter:
 
     def save_kinematics_plot(self, output_path: str):
         """
-        Generates and saves a publication-quality Matplotlib kinematic plot
-        showing angle trajectories, expected value lines, and variance (±1σ) bands.
+        Generates and saves a 4-panel publication-grade Matplotlib kinematic plot
+        showing angle trajectories, expected value lines, and variance (±1σ) bands
+        across every adjacent appendage.
         """
         os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
 
-        fig, axs = plt.subplots(3, 1, figsize=(12, 11), sharex=True)
+        fig, axs = plt.subplots(4, 1, figsize=(13, 14), sharex=True)
         fig.suptitle(
-            "FormCheck Kinematic Analysis: Joint Angles, Expected Values & Variance",
-            fontsize=15,
+            "FormCheck Kinematic Analysis: All Adjacent Appendage Angles, Expected Values & Variance",
+            fontsize=14,
             fontweight="bold",
             y=0.98,
         )
 
-        # Color schemes
         c_left = "#1f77b4"
         c_right = "#ff7f0e"
-        c_accent = "#2ca02c"
+        c_alt1 = "#2ca02c"
+        c_alt2 = "#d62728"
 
-        # --- Subplot 1: Knee Angles (Femur & Shin) ---
+        # --- Subplot 1: Lower Body - Knees & Hips ---
         ax1 = axs[0]
-        self._plot_joint_series(
-            ax1, "left_knee", "Left Knee (Femur-Shin)", c_left, linestyle="-"
-        )
-        self._plot_joint_series(
-            ax1, "right_knee", "Right Knee (Femur-Shin)", c_right, linestyle="--"
-        )
-        ax1.set_ylabel("Knee Angle (°)", fontsize=11, fontweight="semibold")
-        ax1.set_title("Knee Kinematics (Femur & Shin)", fontsize=12, fontweight="bold")
+        p1 = self._plot_joint_series(ax1, "left_knee", "L Knee (Femur-Shin)", c_left, "-")
+        p2 = self._plot_joint_series(ax1, "right_knee", "R Knee (Femur-Shin)", c_right, "--")
+        p3 = self._plot_joint_series(ax1, "left_hip", "L Hip (Torso-Femur)", c_alt1, "-.")
+        p4 = self._plot_joint_series(ax1, "right_hip", "R Hip (Torso-Femur)", c_alt2, ":")
+        ax1.set_ylabel("Angle (°)", fontsize=10, fontweight="bold")
+        ax1.set_title("Lower Body: Knees & Hips (Femur Kinematics)", fontsize=11, fontweight="bold")
         ax1.grid(True, linestyle=":", alpha=0.6)
-        ax1.legend(loc="upper right", framealpha=0.9)
+        if any([p1, p2, p3, p4]):
+            ax1.legend(loc="upper right", framealpha=0.9, fontsize=8)
 
-        # --- Subplot 2: Hip Angles (Torso & Femur) ---
+        # --- Subplot 2: Lower Body - Ankles & Pelvis ---
         ax2 = axs[1]
-        self._plot_joint_series(
-            ax2, "left_hip", "Left Hip (Torso-Femur)", c_left, linestyle="-"
-        )
-        self._plot_joint_series(
-            ax2, "right_hip", "Right Hip (Torso-Femur)", c_right, linestyle="--"
-        )
-        ax2.set_ylabel("Hip Angle (°)", fontsize=11, fontweight="semibold")
-        ax2.set_title("Hip Kinematics (Torso & Femur)", fontsize=12, fontweight="bold")
+        p5 = self._plot_joint_series(ax2, "left_ankle", "L Ankle (Shin-Foot)", c_left, "-")
+        p6 = self._plot_joint_series(ax2, "right_ankle", "R Ankle (Shin-Foot)", c_right, "--")
+        p7 = self._plot_joint_series(ax2, "left_pelvis_femur", "L Pelvis-Femur", c_alt1, "-.")
+        p8 = self._plot_joint_series(ax2, "right_pelvis_femur", "R Pelvis-Femur", c_alt2, ":")
+        ax2.set_ylabel("Angle (°)", fontsize=10, fontweight="bold")
+        ax2.set_title("Lower Body: Ankles (Shin-Foot) & Pelvic Abduction", fontsize=11, fontweight="bold")
         ax2.grid(True, linestyle=":", alpha=0.6)
-        ax2.legend(loc="upper right", framealpha=0.9)
+        if any([p5, p6, p7, p8]):
+            ax2.legend(loc="upper right", framealpha=0.9, fontsize=8)
 
-        # --- Subplot 3: Ankles & Torso Lean ---
+        # --- Subplot 3: Upper Body - Shoulders & Elbows ---
         ax3 = axs[2]
-        self._plot_joint_series(
-            ax3, "left_ankle", "Left Ankle (Shin-Foot)", c_left, linestyle="-"
-        )
-        self._plot_joint_series(
-            ax3, "right_ankle", "Right Ankle (Shin-Foot)", c_right, linestyle="--"
-        )
-        self._plot_joint_series(
-            ax3,
-            "trunk_inclination",
-            "Trunk Lean (Torso vs Vertical)",
-            c_accent,
-            linestyle="-.",
-        )
-        ax3.set_xlabel("Time (seconds)", fontsize=11, fontweight="semibold")
-        ax3.set_ylabel("Angle (°)", fontsize=11, fontweight="semibold")
-        ax3.set_title("Ankle & Trunk Inclination", fontsize=12, fontweight="bold")
+        p9 = self._plot_joint_series(ax3, "left_shoulder", "L Shoulder (Torso-Arm)", c_left, "-")
+        p10 = self._plot_joint_series(ax3, "right_shoulder", "R Shoulder (Torso-Arm)", c_right, "--")
+        p11 = self._plot_joint_series(ax3, "left_elbow", "L Elbow (Arm-Forearm)", c_alt1, "-.")
+        p12 = self._plot_joint_series(ax3, "right_elbow", "R Elbow (Arm-Forearm)", c_alt2, ":")
+        ax3.set_ylabel("Angle (°)", fontsize=10, fontweight="bold")
+        ax3.set_title("Upper Body: Shoulders & Elbows", fontsize=11, fontweight="bold")
         ax3.grid(True, linestyle=":", alpha=0.6)
-        ax3.legend(loc="upper right", framealpha=0.9)
+        if any([p9, p10, p11, p12]):
+            ax3.legend(loc="upper right", framealpha=0.9, fontsize=8)
 
-        plt.tight_layout(rect=[0, 0.02, 1, 0.96])
+        # --- Subplot 4: Wrists & Core/Spine ---
+        ax4 = axs[3]
+        p13 = self._plot_joint_series(ax4, "left_wrist_index", "L Wrist (Forearm-Hand)", c_left, "-")
+        p14 = self._plot_joint_series(ax4, "right_wrist_index", "R Wrist (Forearm-Hand)", c_right, "--")
+        p15 = self._plot_joint_series(ax4, "trunk_inclination", "Trunk Lean vs Vertical", c_alt1, "-.")
+        p16 = self._plot_joint_series(ax4, "neck_head_angle", "Head & Neck to Spine", c_alt2, ":")
+        ax4.set_xlabel("Time (seconds)", fontsize=10, fontweight="bold")
+        ax4.set_ylabel("Angle (°)", fontsize=10, fontweight="bold")
+        ax4.set_title("Distal & Axial: Wrists, Trunk Lean & Head/Neck", fontsize=11, fontweight="bold")
+        ax4.grid(True, linestyle=":", alpha=0.6)
+        if any([p13, p14, p15, p16]):
+            ax4.legend(loc="upper right", framealpha=0.9, fontsize=8)
+
+        plt.tight_layout(rect=[0, 0.02, 1, 0.97])
         plt.savefig(output_path, dpi=200)
         plt.close(fig)
         print(f"[✓] Saved Kinematic Plot to: {output_path}")
 
     def _plot_joint_series(
         self, ax, joint_key: str, label_prefix: str, color: str, linestyle: str = "-"
-    ):
+    ) -> bool:
         """Helper to plot time-series with Expected Value line and Variance band."""
         series = self.tracker.history.get(joint_key, [])
         if not series:
-            return
+            return False
 
         times = np.array([t for _, t, _ in series])
         angles = np.array([a for _, _, a in series])
 
         if len(angles) == 0:
-            return
+            return False
 
         mean = np.mean(angles)
         variance = np.var(angles)
         std = np.std(angles)
 
-        # Plot angle trajectory
         ax.plot(
             times,
             angles,
             color=color,
             linestyle=linestyle,
-            linewidth=1.8,
+            linewidth=1.7,
             label=f"{label_prefix} [E={mean:.1f}°, Var={variance:.1f}°²]",
         )
 
-        # Expected value dashed line
         ax.axhline(
             mean,
             color=color,
             linestyle=":",
-            alpha=0.6,
-            linewidth=1.2,
+            alpha=0.55,
+            linewidth=1.1,
         )
 
-        # Variance band: mean ± 1 std dev (sigma = sqrt(var))
         ax.fill_between(
             times,
             mean - std,
@@ -277,3 +262,4 @@ class KinematicReporter:
             color=color,
             alpha=0.12,
         )
+        return True

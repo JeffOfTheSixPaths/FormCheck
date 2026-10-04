@@ -1,11 +1,13 @@
-"""Real-time feedback, form scoring, and joint kinematic telemetry panel."""
+"""Real-time feedback, form scoring, and joint kinematic telemetry panel.
 
-from typing import Optional
+A sleek, unified HUD eliminating nested group boxes and heavy bordered data blocks.
+"""
+
+from typing import Dict, Optional, Tuple
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QProgressBar,
@@ -18,76 +20,158 @@ from services.theme import THEME
 
 
 class FeedbackPanel(QWidget):
-    """Visualizes live biomechanical metrics, form scores, and coaching cues."""
+    """Visualizes live biomechanical metrics, form scores, and coaching cues in a clean HUD."""
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self.setFixedWidth(300)
+        self.setFixedWidth(330)
         self._init_ui()
 
     def _init_ui(self) -> None:
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 12, 12, 12)
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+        outer_layout.setSpacing(0)
+
+        # Main HUD frame
+        self.hud_frame = QFrame(self)
+        self.hud_frame.setObjectName("hud_frame")
+        self.hud_frame.setStyleSheet(
+            f"QFrame#hud_frame {{ "
+            f"background-color: {THEME.BG_SURFACE}; "
+            f"border: 1px solid {THEME.BORDER_COLOR}; "
+            f"border-radius: {THEME.BORDER_RADIUS}; "
+            f"}} "
+            f"QLabel {{ border: none; background: transparent; }}"
+        )
+
+        layout = QVBoxLayout(self.hud_frame)
+        layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(14)
 
-        # 1. Form Score Group
-        score_group = QGroupBox("Form Quality")
-        score_layout = QVBoxLayout(score_group)
-        score_layout.setSpacing(6)
+        # ----------------------------------------------------------------------
+        # 1. ATHLETIC EXECUTION & PHASE HUD (Top Section)
+        # ----------------------------------------------------------------------
+        top_header = QHBoxLayout()
+        top_header.setContentsMargins(0, 0, 0, 0)
 
-        self.lbl_score = QLabel("100%")
-        self.lbl_score.setAlignment(Qt.AlignCenter)
-        self.lbl_score.setStyleSheet(
-            f"font-size: 34px; font-weight: 800; color: {THEME.COLOR_SUCCESS_BRIGHT}; "
-            f"font-family: {THEME.FONT_FAMILY_TECH}; letter-spacing: 2px;"
+        lbl_exec_title = QLabel("ATHLETIC EXECUTION")
+        lbl_exec_title.setStyleSheet(
+            f"color: {THEME.TEXT_MUTED}; font-size: 10px; font-weight: 700; "
+            f"font-family: {THEME.FONT_FAMILY_DISPLAY}; letter-spacing: 1.2px;"
         )
-        score_layout.addWidget(self.lbl_score)
+        top_header.addWidget(lbl_exec_title)
+        top_header.addStretch()
 
+        # Modern phase pill badge (replaces bulky phase box)
+        self.lbl_phase = QLabel("READY")
+        self.lbl_phase.setAlignment(Qt.AlignCenter)
+        self.lbl_phase.setStyleSheet(
+            f"background-color: rgba(165, 243, 252, 0.10); "
+            f"color: {THEME.PRIMARY_COLOR}; "
+            f"font-size: 10px; font-weight: 800; letter-spacing: 1.2px; "
+            f"padding: 3px 10px; border-radius: 10px; "
+            f"border: 1px solid rgba(165, 243, 252, 0.25); "
+            f"font-family: {THEME.FONT_FAMILY_TECH};"
+        )
+        top_header.addWidget(self.lbl_phase)
+        layout.addLayout(top_header)
+
+        # Score readout
+        self.lbl_score = QLabel("100%")
+        self.lbl_score.setAlignment(Qt.AlignLeft)
+        self.lbl_score.setStyleSheet(
+            f"font-size: 38px; font-weight: 800; color: {THEME.COLOR_SUCCESS_BRIGHT}; "
+            f"font-family: {THEME.FONT_FAMILY_TECH}; letter-spacing: 1px;"
+        )
+        layout.addWidget(self.lbl_score)
+
+        # Ultra-thin, sleek modern progress bar
         self.bar_score = QProgressBar()
         self.bar_score.setRange(0, 100)
         self.bar_score.setValue(100)
         self.bar_score.setTextVisible(False)
-        self.bar_score.setFixedHeight(10)
-        score_layout.addWidget(self.bar_score)
-        layout.addWidget(score_group)
-
-        # 2. Phase Indicator
-        phase_group = QGroupBox("Motion Phase")
-        phase_layout = QVBoxLayout(phase_group)
-
-        self.lbl_phase = QLabel("IDLE")
-        self.lbl_phase.setAlignment(Qt.AlignCenter)
-        self.lbl_phase.setStyleSheet(
-            f"background-color: {THEME.BG_INPUT}; color: {THEME.PRIMARY_COLOR}; font-size: 13px; "
-            f"font-weight: 700; letter-spacing: 2px; padding: 8px; border-radius: {THEME.BORDER_RADIUS}; "
-            f"border: 1px solid {THEME.BORDER_COLOR}; font-family: {THEME.FONT_FAMILY_DISPLAY};"
+        self.bar_score.setFixedHeight(6)
+        self.bar_score.setStyleSheet(
+            f"QProgressBar {{ "
+            f"background-color: {THEME.BG_INPUT}; "
+            f"border: none; "
+            f"border-radius: 3px; "
+            f"}} "
+            f"QProgressBar::chunk {{ "
+            f"background-color: {THEME.COLOR_SUCCESS_BRIGHT}; "
+            f"border-radius: 3px; "
+            f"}}"
         )
-        phase_layout.addWidget(self.lbl_phase)
-        layout.addWidget(phase_group)
+        layout.addWidget(self.bar_score)
 
-        # 3. Live Form Coaching Group
-        fb_group = QGroupBox("Real-Time Coaching")
-        self.fb_layout = QVBoxLayout(fb_group)
-        self.fb_layout.setSpacing(6)
+        # Divider line
+        layout.addWidget(self._create_divider())
 
-        self.lbl_feedback = QLabel("Waiting to begin movement...")
+        # ----------------------------------------------------------------------
+        # 2. COACHING CUES SECTION
+        # ----------------------------------------------------------------------
+        lbl_cues_title = QLabel("COACHING CUES")
+        lbl_cues_title.setStyleSheet(
+            f"color: {THEME.TEXT_MUTED}; font-size: 10px; font-weight: 700; "
+            f"font-family: {THEME.FONT_FAMILY_DISPLAY}; letter-spacing: 1.2px;"
+        )
+        layout.addWidget(lbl_cues_title)
+
+        # Single sleek coaching banner (no box inside box)
+        self.lbl_feedback = QLabel("Waiting to begin athletic movement...")
         self.lbl_feedback.setWordWrap(True)
         self.lbl_feedback.setStyleSheet(
-            f"background-color: {THEME.BG_SURFACE}; color: {THEME.TEXT_PRIMARY}; font-size: 13px; "
-            f"padding: 10px; border-radius: {THEME.BORDER_RADIUS}; border: 1px solid {THEME.BORDER_COLOR}; "
-            f"border-left: 4px solid {THEME.COLOR_SUCCESS_BRIGHT}; font-family: {THEME.FONT_FAMILY}; letter-spacing: 0.5px;"
+            f"background-color: {THEME.BG_INPUT}; "
+            f"color: {THEME.TEXT_PRIMARY}; "
+            f"font-size: 12px; "
+            f"padding: 12px 14px; "
+            f"min-height: 58px; "
+            f"border-radius: {THEME.BORDER_RADIUS_SM}; "
+            f"border-left: 3px solid {THEME.COLOR_SUCCESS_BRIGHT}; "
+            f"font-family: {THEME.FONT_FAMILY}; "
+            f"letter-spacing: 0.4px; "
+            f"line-height: 1.4;"
         )
-        self.fb_layout.addWidget(self.lbl_feedback)
-        layout.addWidget(fb_group)
+        layout.addWidget(self.lbl_feedback)
 
-        # 4. Joint Telemetry Group
-        angles_group = QGroupBox("Joint Kinematics")
-        self.angles_layout = QGridLayout(angles_group)
-        self.angles_layout.setSpacing(8)
-        self.angle_labels = {}
-        layout.addWidget(angles_group)
+        # Divider line
+        layout.addWidget(self._create_divider())
+
+        # ----------------------------------------------------------------------
+        # 3. JOINT KINEMATICS SECTION
+        # ----------------------------------------------------------------------
+        lbl_kin_title = QLabel("JOINT KINEMATICS")
+        lbl_kin_title.setStyleSheet(
+            f"color: {THEME.TEXT_MUTED}; font-size: 10px; font-weight: 700; "
+            f"font-family: {THEME.FONT_FAMILY_DISPLAY}; letter-spacing: 1.2px;"
+        )
+        layout.addWidget(lbl_kin_title)
+
+        # Placeholder label when no telemetry is streaming
+        self.lbl_kin_placeholder = QLabel("Stand in view of camera to stream telemetry")
+        self.lbl_kin_placeholder.setStyleSheet(
+            f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-style: italic; padding: 6px 2px;"
+        )
+        layout.addWidget(self.lbl_kin_placeholder)
+
+        # Dynamic kinematics table
+        self.angles_container = QWidget()
+        self.angles_layout = QVBoxLayout(self.angles_container)
+        self.angles_layout.setContentsMargins(0, 0, 0, 0)
+        self.angles_layout.setSpacing(6)
+        self.angles_container.setVisible(False)
+        layout.addWidget(self.angles_container)
+
+        self.angle_rows: Dict[str, Tuple[QLabel, QLabel]] = {}
 
         layout.addStretch()
+        outer_layout.addWidget(self.hud_frame)
+
+    def _create_divider(self) -> QFrame:
+        line = QFrame()
+        line.setFixedHeight(1)
+        line.setStyleSheet(f"background-color: {THEME.BORDER_COLOR}; margin: 2px 0;")
+        return line
 
     def update_metrics(self, metrics: ExerciseMetrics) -> None:
         """Renders incoming metrics from the pose analyzer."""
@@ -104,43 +188,82 @@ class FeedbackPanel(QWidget):
             color = THEME.COLOR_DANGER_BRIGHT
 
         self.lbl_score.setStyleSheet(
-            f"font-size: 34px; font-weight: 800; color: {color}; "
-            f"font-family: {THEME.FONT_FAMILY_TECH}; letter-spacing: 2px;"
+            f"font-size: 38px; font-weight: 800; color: {color}; "
+            f"font-family: {THEME.FONT_FAMILY_TECH}; letter-spacing: 1px;"
         )
         self.bar_score.setStyleSheet(
-            f"QProgressBar::chunk {{ background-color: {color}; border-radius: {THEME.BORDER_RADIUS_SM}; }}"
+            f"QProgressBar {{ background-color: {THEME.BG_INPUT}; border: none; border-radius: 3px; }} "
+            f"QProgressBar::chunk {{ background-color: {color}; border-radius: 3px; }}"
         )
 
-        # 2. Update phase
-        self.lbl_phase.setText(metrics.phase.upper())
+        # 2. Update phase pill
+        phase_text = metrics.phase.upper()
+        self.lbl_phase.setText(phase_text)
+        if "BREAK" in phase_text or "FAIL" in phase_text:
+            pill_color = THEME.COLOR_DANGER_BRIGHT
+            pill_bg = "rgba(252, 165, 165, 0.12)"
+        elif "CLEAN" in phase_text or "GOOD" in phase_text:
+            pill_color = THEME.COLOR_SUCCESS_BRIGHT
+            pill_bg = "rgba(134, 239, 172, 0.12)"
+        else:
+            pill_color = THEME.PRIMARY_COLOR
+            pill_bg = "rgba(165, 243, 252, 0.10)"
 
-        # 3. Update feedback
+        self.lbl_phase.setStyleSheet(
+            f"background-color: {pill_bg}; color: {pill_color}; "
+            f"font-size: 10px; font-weight: 800; letter-spacing: 1.2px; "
+            f"padding: 3px 10px; border-radius: 10px; "
+            f"border: 1px solid {pill_color}40; "
+            f"font-family: {THEME.FONT_FAMILY_TECH};"
+        )
+
+        # 3. Update coaching cues
         if metrics.feedback:
             primary_cue = metrics.feedback[0]
             self.lbl_feedback.setText(primary_cue)
-            border_color = color if "Rep completed" not in primary_cue else THEME.COLOR_SUCCESS_BRIGHT
+            accent = color if "Clean" not in primary_cue else THEME.COLOR_SUCCESS_BRIGHT
             self.lbl_feedback.setStyleSheet(
-                f"background-color: {THEME.BG_SURFACE}; color: {THEME.TEXT_PRIMARY}; font-size: 13px; "
-                f"padding: 10px; border-radius: {THEME.BORDER_RADIUS}; border: 1px solid {THEME.BORDER_COLOR}; "
-                f"border-left: 4px solid {border_color}; font-family: {THEME.FONT_FAMILY}; letter-spacing: 0.5px;"
+                f"background-color: {THEME.BG_INPUT}; color: {THEME.TEXT_PRIMARY}; font-size: 12px; "
+                f"padding: 12px 14px; min-height: 58px; border-radius: {THEME.BORDER_RADIUS_SM}; "
+                f"border-left: 3px solid {accent}; font-family: {THEME.FONT_FAMILY}; letter-spacing: 0.4px;"
             )
         else:
-            self.lbl_feedback.setText("Form looks steady.")
+            self.lbl_feedback.setText("Form looks steady and controlled.")
+            self.lbl_feedback.setStyleSheet(
+                f"background-color: {THEME.BG_INPUT}; color: {THEME.TEXT_PRIMARY}; font-size: 12px; "
+                f"padding: 12px 14px; min-height: 58px; border-radius: {THEME.BORDER_RADIUS_SM}; "
+                f"border-left: 3px solid {THEME.COLOR_SUCCESS_BRIGHT}; font-family: {THEME.FONT_FAMILY}; letter-spacing: 0.4px;"
+            )
 
-        # 4. Update joint angles
-        for row, (name, val) in enumerate(metrics.joint_angles.items()):
-            if name not in self.angle_labels:
-                lbl_name = QLabel(f"{name}:")
-                lbl_name.setStyleSheet(
-                    f"color: {THEME.TEXT_MUTED}; font-size: 12px; font-family: {THEME.FONT_FAMILY_DISPLAY}; letter-spacing: 0.8px;"
-                )
-                lbl_val = QLabel(f"{val:.1f}°")
-                lbl_val.setStyleSheet(
-                    f"color: {THEME.PRIMARY_COLOR}; font-weight: bold; font-size: 13px; font-family: {THEME.FONT_FAMILY_TECH}; letter-spacing: 1px;"
-                )
-                self.angles_layout.addWidget(lbl_name, row, 0)
-                self.angles_layout.addWidget(lbl_val, row, 1)
-                self.angle_labels[name] = (lbl_name, lbl_val)
-            else:
-                _, lbl_val = self.angle_labels[name]
-                lbl_val.setText(f"{val:.1f}°")
+        # 4. Update joint kinematics list
+        if metrics.joint_angles:
+            self.lbl_kin_placeholder.setVisible(False)
+            self.angles_container.setVisible(True)
+
+            for name, val in metrics.joint_angles.items():
+                if name not in self.angle_rows:
+                    row_widget = QWidget()
+                    r_layout = QHBoxLayout(row_widget)
+                    r_layout.setContentsMargins(0, 3, 0, 3)
+
+                    lbl_name = QLabel(f"{name}")
+                    lbl_name.setStyleSheet(
+                        f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-family: {THEME.FONT_FAMILY};"
+                    )
+                    lbl_val = QLabel(f"{val:.1f}°")
+                    lbl_val.setStyleSheet(
+                        f"color: {THEME.PRIMARY_COLOR}; font-weight: 700; font-size: 13px; "
+                        f"font-family: {THEME.FONT_FAMILY_TECH}; letter-spacing: 0.5px;"
+                    )
+                    r_layout.addWidget(lbl_name)
+                    r_layout.addStretch()
+                    r_layout.addWidget(lbl_val)
+
+                    self.angles_layout.addWidget(row_widget)
+                    self.angle_rows[name] = (lbl_name, lbl_val)
+                else:
+                    _, lbl_val = self.angle_rows[name]
+                    lbl_val.setText(f"{val:.1f}°")
+        else:
+            self.lbl_kin_placeholder.setVisible(True)
+            self.angles_container.setVisible(False)

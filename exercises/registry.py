@@ -1,17 +1,39 @@
-"""Registry for dynamic registration and retrieval of exercises."""
+"""Registry for dynamic registration and retrieval of athletic exercises."""
 
 from typing import Dict, List, Type
 from exercises.base_exercise import BaseExercise
-from exercises.pushup import PushUpExercise
+from exercises.volleyball import (
+    VolleyballHittingArmSwingExercise,
+    VolleyballHittingApproachExercise,
+    VolleyballPassingExercise,
+    VolleyballSettingExercise,
+)
+from exercises.baseball import (
+    BaseballHittingExercise,
+    BaseballPitchingExercise,
+    BaseballFieldingExercise,
+)
 from exercises.squat import SquatExercise
+from exercises.pushup import PushUpExercise
 
 
 class ExerciseRegistry:
-    """Registry maintaining available exercise modules."""
+    """Registry maintaining available athletic movement modules."""
 
     def __init__(self) -> None:
         self._exercises: Dict[str, Type[BaseExercise]] = {}
-        # Register core defaults
+        # 1. Volleyball Modules
+        self.register(VolleyballHittingArmSwingExercise)
+        self.register(VolleyballHittingApproachExercise)
+        self.register(VolleyballPassingExercise)
+        self.register(VolleyballSettingExercise)
+
+        # 2. Baseball Modules
+        self.register(BaseballHittingExercise)
+        self.register(BaseballPitchingExercise)
+        self.register(BaseballFieldingExercise)
+
+        # 3. Foundational Athletic Drills
         self.register(SquatExercise)
         self.register(PushUpExercise)
 
