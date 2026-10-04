@@ -32,41 +32,41 @@ class ResultsPanel(QWidget):
         outer_layout.setSpacing(0)
 
         # Single continuous sleek telemetry bar (no chunky isolated box blocks)
-        self.ribbon = QFrame(self)
-        self.ribbon.setObjectName("results_ribbon")
-        self.ribbon.setStyleSheet(
-            f"QFrame#results_ribbon {{ "
-            f"background-color: {THEME.BG_SURFACE}; "
-            f"border: 1px solid {THEME.BORDER_COLOR}; "
-            f"border-radius: {THEME.BORDER_RADIUS}; "
-            f"}} "
-            f"QLabel {{ border: none; background: transparent; }}"
-        )
+        # self.ribbon = QFrame(self)
+        # self.ribbon.setObjectName("results_ribbon")
+        # self.ribbon.setStyleSheet(
+        #     f"QFrame#results_ribbon {{ "
+        #     f"background-color: {THEME.BG_SURFACE}; "
+        #     f"border: 1px solid {THEME.BORDER_COLOR}; "
+        #     f"border-radius: {THEME.BORDER_RADIUS}; "
+        #     f"}} "
+        #     f"QLabel {{ border: none; background: transparent; }}"
+        # )
 
-        ribbon_layout = QHBoxLayout(self.ribbon)
-        ribbon_layout.setContentsMargins(16, 8, 16, 8)
-        ribbon_layout.setSpacing(0)
+        #ribbon_layout = QHBoxLayout(self.ribbon)
+        #ribbon_layout.setContentsMargins(16, 8, 16, 8)
+        #ribbon_layout.setSpacing(0)
 
         # Metric 1: Total Reps
-        col_total, self.lbl_val_total = self._create_stat_column("ATHLETE REPS", "0", THEME.TEXT_PRIMARY, "#ffffff")
-        ribbon_layout.addWidget(col_total, stretch=1)
-        ribbon_layout.addWidget(self._create_divider())
+        #col_total, self.lbl_val_total = self._create_stat_column("ATHLETE REPS", "0", THEME.TEXT_PRIMARY, "#ffffff")
+        #ribbon_layout.addWidget(col_total, stretch=1)
+        #ribbon_layout.addWidget(self._create_divider())
 
         # Metric 2: Clean Reps
-        col_good, self.lbl_val_good = self._create_stat_column("CLEAN REPS", "0", THEME.COLOR_SUCCESS_BRIGHT, THEME.COLOR_SUCCESS_BRIGHT)
-        ribbon_layout.addWidget(col_good, stretch=1)
-        ribbon_layout.addWidget(self._create_divider())
+        #col_good, self.lbl_val_good = self._create_stat_column("CLEAN REPS", "0", THEME.COLOR_SUCCESS_BRIGHT, THEME.COLOR_SUCCESS_BRIGHT)
+        #ribbon_layout.addWidget(col_good, stretch=1)
+        #ribbon_layout.addWidget(self._create_divider())
 
         # Metric 3: Form Breaks
-        col_bad, self.lbl_val_bad = self._create_stat_column("FORM BREAKS", "0", THEME.COLOR_DANGER_BRIGHT, THEME.COLOR_DANGER_BRIGHT)
-        ribbon_layout.addWidget(col_bad, stretch=1)
-        ribbon_layout.addWidget(self._create_divider())
+        #col_bad, self.lbl_val_bad = self._create_stat_column("FORM BREAKS", "0", THEME.COLOR_DANGER_BRIGHT, THEME.COLOR_DANGER_BRIGHT)
+        #ribbon_layout.addWidget(col_bad, stretch=1)
+        #ribbon_layout.addWidget(self._create_divider())
 
         # Metric 4: Form Accuracy
-        col_accuracy, self.lbl_val_accuracy = self._create_stat_column("FORM ACCURACY", "100%", THEME.PRIMARY_COLOR, THEME.PRIMARY_COLOR)
-        ribbon_layout.addWidget(col_accuracy, stretch=1)
+        #col_accuracy, self.lbl_val_accuracy = self._create_stat_column("FORM ACCURACY", "100%", THEME.PRIMARY_COLOR, THEME.PRIMARY_COLOR)
+        #ribbon_layout.addWidget(col_accuracy, stretch=1)
 
-        outer_layout.addWidget(self.ribbon)
+        #outer_layout.addWidget(self.ribbon)
 
     def _create_divider(self) -> QFrame:
         divider = QFrame()

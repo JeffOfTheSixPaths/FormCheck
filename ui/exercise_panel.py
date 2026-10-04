@@ -88,7 +88,7 @@ class ExercisePanel(QWidget):
         source_layout.addWidget(lbl_mode)
 
         self.combo_source_mode = QComboBox()
-        self.combo_source_mode.addItem("Live Optical Sensor", "camera")
+        self.combo_source_mode.addItem("Live Camera", "camera")
         self.combo_source_mode.addItem("Upload Athletic Video", "video")
         self.combo_source_mode.currentIndexChanged.connect(self._on_source_mode_changed)
         source_layout.addWidget(self.combo_source_mode)
@@ -192,7 +192,7 @@ class ExercisePanel(QWidget):
         )
         ctrl_layout.addWidget(self.lbl_record_status)
 
-        self.btn_start = QPushButton("START DRILL")
+        self.btn_start = QPushButton("START RECORDING")
         self.btn_start.setObjectName("btn_start")
         self.btn_start.setMinimumHeight(52)
         self.btn_start.clicked.connect(self.start_requested.emit)

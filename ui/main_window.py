@@ -89,7 +89,7 @@ class MainWindow(QMainWindow):
         nav_home_action = file_menu.addAction("Go to Dashboard (Home)")
         nav_home_action.triggered.connect(lambda: self.set_active_screen(self.SCREEN_HOME))
 
-        nav_drill_action = file_menu.addAction("Go to Live Optical Drill")
+        nav_drill_action = file_menu.addAction("Go to Live Recorder")
         nav_drill_action.triggered.connect(lambda: self.set_active_screen(self.SCREEN_DRILL))
 
         nav_upload_action = file_menu.addAction("Go to Video Vault (Upload)")
@@ -499,9 +499,9 @@ class MainWindow(QMainWindow):
             is_paused = self._worker.toggle_pause()
             self.exercise_panel.set_paused_state(is_paused)
             if is_paused:
-                self._update_status_bar("Drill telemetry paused.")
+                self._update_status_bar("Recording paused.")
             else:
-                self._update_status_bar("Drill telemetry resumed.")
+                self._update_status_bar("Recording resumed.")
 
     def _on_stop_session(self) -> None:
         if self._worker:
@@ -516,10 +516,10 @@ class MainWindow(QMainWindow):
         info = self.exercise_panel.get_current_source_info()
         if info["mode"] == "video" and info["name"]:
             self.camera_view.set_inactive(
-                f"ATHLETIC VIDEO LOADED\n{info['name']}\n\nClick 'START DRILL' to run biomechanical analysis"
+                f"ATHLETIC VIDEO LOADED\n{info['name']}\n\nClick 'START RECORDING' to run biomechanical analysis"
             )
         else:
-            self.camera_view.set_inactive("OPTICAL SENSOR INACTIVE\nClick 'START DRILL' to initiate session.")
+            self.camera_view.set_inactive("CAMERA OFF\nClick 'START RECORDING' to initiate session.")
 
         stats = self.results_panel.get_stats()
         user_id = self._user.get("id")
@@ -540,10 +540,10 @@ class MainWindow(QMainWindow):
                 )
                 return
 
-        self._update_status_bar("Drill session terminated.")
+        self._update_status_bar("Session terminated.")
 
     def _on_recording_saved(self, temp_path: str, exercise_name: str, duration: float) -> None:
-        """Uploads auto-recorded drill movement to server vault and offers pro similarity recommendation."""
+        """Uploads auto-recordedmovement to server vault and offers pro similarity recommendation."""
         if not Path(temp_path).exists():
             return
 

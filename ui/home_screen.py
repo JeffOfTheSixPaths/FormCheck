@@ -200,9 +200,9 @@ class HomeScreen(QWidget):
         # Card 1: Live Sensor / Camera Tracking
         card_drill = NavCard(
             badge_text="Module 01 // Real-Time",
-            title="LIVE OPTICAL DRILL TRACKER",
-            subtitle="Calibrate your webcam or optical sensor for real-time repetition counting, form accuracy, and live audio-visual coaching cues.",
-            action_label="LAUNCH SENSOR SESSION",
+            title="LIVE RECORDER",
+            subtitle="Calibrate your webcam or optical sensor for real-time recording.",
+            action_label="LAUNCH RECORDING SESSION",
             accent_color=THEME.COLOR_SUCCESS_BRIGHT,
         )
         card_drill.clicked.connect(lambda: self.navigate_to.emit("drill"))
