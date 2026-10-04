@@ -135,6 +135,45 @@ class ComparisonEngine:
         return mirrored
 
     @classmethod
+    def get_torso_length(cls, landmarks: Any) -> Optional[float]:
+        """Calculates anatomical torso length (distance from shoulders to hips).
+        Works with dict landmarks, object landmarks, or raw point dictionaries.
+        """
+        if not landmarks:
+            return None
+        raw_pts = {}
+        if isinstance(landmarks, dict):
+            raw_pts = landmarks
+        else:
+            for idx, lm in enumerate(landmarks):
+                if isinstance(lm, dict):
+                    raw_pts[idx] = (float(lm.get("x", 0.0)), float(lm.get("y", 0.0)))
+                elif lm is not None:
+                    raw_pts[idx] = (float(getattr(lm, "x", 0.0)), float(getattr(lm, "y", 0.0)))
+
+        torsos = []
+        # Left shoulder (11) to Left hip (23)
+        if 11 in raw_pts and 23 in raw_pts:
+            torsos.append(float(np.hypot(raw_pts[11][0] - raw_pts[23][0], raw_pts[11][1] - raw_pts[23][1])))
+        # Right shoulder (12) to Right hip (24)
+        if 12 in raw_pts and 24 in raw_pts:
+            torsos.append(float(np.hypot(raw_pts[12][0] - raw_pts[24][0], raw_pts[12][1] - raw_pts[24][1])))
+        if torsos:
+            return float(np.mean(torsos))
+
+        # Single-side or cross fallbacks
+        if (11 in raw_pts or 12 in raw_pts) and (23 in raw_pts or 24 in raw_pts):
+            sho = raw_pts.get(12, raw_pts.get(11))
+            hip = raw_pts.get(24, raw_pts.get(23))
+            return float(np.hypot(sho[0] - hip[0], sho[1] - hip[1]))
+
+        # Fallback to shoulder width * 1.35
+        if 11 in raw_pts and 12 in raw_pts:
+            return float(np.hypot(raw_pts[11][0] - raw_pts[12][0], raw_pts[11][1] - raw_pts[12][1]) * 1.35)
+
+        return None
+
+    @classmethod
     def compare_frames(
         cls,
         user_landmarks: Optional[List],
@@ -322,42 +361,25 @@ class ComparisonEngine:
                 if coords:
                     raw_user_pts[idx] = coords
 
-            # Right Shoulder to Right Shoulder Central Anchor (Landmark 12)
-            if pro_pts and 12 in pro_pts and 12 in raw_user_pts:
-                p_r_sho = pro_pts[12]
-                u_r_sho = raw_user_pts[12]
+            # Compute anatomical torso lengths in canvas pixels
+            p_torso = cls.get_torso_length(pro_pts)
+            u_torso = cls.get_torso_length(raw_user_pts)
 
-                # Compute anatomical scale factor from torso (right shoulder to right hip 12 -> 24)
-                scale = 1.0
-                if 24 in pro_pts and 24 in raw_user_pts:
-                    p_torso = np.hypot(p_r_sho[0] - pro_pts[24][0], p_r_sho[1] - pro_pts[24][1])
-                    u_torso = np.hypot(u_r_sho[0] - raw_user_pts[24][0], u_r_sho[1] - raw_user_pts[24][1])
-                    if u_torso > 12:
-                        scale = max(0.5, min(2.0, p_torso / u_torso))
-                elif 11 in pro_pts and 11 in raw_user_pts:
-                    p_span = np.hypot(p_r_sho[0] - pro_pts[11][0], p_r_sho[1] - pro_pts[11][1])
-                    u_span = np.hypot(u_r_sho[0] - raw_user_pts[11][0], u_r_sho[1] - raw_user_pts[11][1])
-                    if u_span > 12:
-                        scale = max(0.5, min(2.0, p_span / u_span))
+            # Proportional scale factor to make user torso equivalent to pro torso
+            scale = 1.0
+            if p_torso and u_torso and u_torso > 8.0:
+                scale = float(p_torso / u_torso)
+                scale = max(0.1, min(10.0, scale))
 
+            # Right Shoulder (12) preferred anchor, fallback to Left Shoulder (11)
+            anchor_idx = 12 if (12 in pro_pts and 12 in raw_user_pts) else (11 if (11 in pro_pts and 11 in raw_user_pts) else None)
+
+            if anchor_idx is not None:
+                p_anchor = pro_pts[anchor_idx]
+                u_anchor = raw_user_pts[anchor_idx]
                 for idx, (ux, uy) in raw_user_pts.items():
-                    norm_x = int(p_r_sho[0] + (ux - u_r_sho[0]) * scale)
-                    norm_y = int(p_r_sho[1] + (uy - u_r_sho[1]) * scale)
-                    user_pts[idx] = (norm_x, norm_y)
-
-            elif pro_pts and 11 in pro_pts and 11 in raw_user_pts:
-                # Fallback to Left Shoulder anchor (Landmark 11)
-                p_l_sho = pro_pts[11]
-                u_l_sho = raw_user_pts[11]
-                scale = 1.0
-                if 23 in pro_pts and 23 in raw_user_pts:
-                    p_torso = np.hypot(p_l_sho[0] - pro_pts[23][0], p_l_sho[1] - pro_pts[23][1])
-                    u_torso = np.hypot(u_l_sho[0] - raw_user_pts[23][0], u_l_sho[1] - raw_user_pts[23][1])
-                    if u_torso > 12:
-                        scale = max(0.5, min(2.0, p_torso / u_torso))
-                for idx, (ux, uy) in raw_user_pts.items():
-                    norm_x = int(p_l_sho[0] + (ux - u_l_sho[0]) * scale)
-                    norm_y = int(p_l_sho[1] + (uy - u_l_sho[1]) * scale)
+                    norm_x = int(p_anchor[0] + (ux - u_anchor[0]) * scale)
+                    norm_y = int(p_anchor[1] + (uy - u_anchor[1]) * scale)
                     user_pts[idx] = (norm_x, norm_y)
             else:
                 for idx, (ux, uy) in raw_user_pts.items():
@@ -428,7 +450,13 @@ class ComparisonEngine:
         for my in range(70, height - 60, 16):
             cv2.line(canvas, (mid_x, my), (mid_x, my + 8), (45, 40, 38), 1, cv2.LINE_AA)
 
-        def _normalize_skeleton(lms, target_cx, target_cy, target_h=420):
+        # Standardized equivalent target torso height on stage (~158px on 720p height)
+        target_torso_px = int(height * 0.22)
+
+        u_torso = cls.get_torso_length(user_landmarks)
+        p_torso = cls.get_torso_length(pro_landmarks)
+
+        def _normalize_skeleton(lms, target_cx, target_cy, torso_len=None):
             if not lms:
                 return {}
             raw_pts = {}
@@ -445,14 +473,27 @@ class ComparisonEngine:
             if not raw_pts:
                 return {}
 
-            ys = [p[1] for p in raw_pts.values()]
-            xs = [p[0] for p in raw_pts.values()]
-            raw_h = max(0.01, max(ys) - min(ys))
-            raw_cx = (min(xs) + max(xs)) / 2.0
-            raw_cy = (min(ys) + max(ys)) / 2.0
+            # Scale to make torsos equivalent in size
+            if torso_len and torso_len > 0.01:
+                scale = target_torso_px / torso_len
+            else:
+                ys = [p[1] for p in raw_pts.values()]
+                raw_h = max(0.01, max(ys) - min(ys))
+                scale = (target_torso_px * 2.8) / raw_h
 
-            scale = target_h / raw_h
-            scale = max(240.0, min(800.0, scale))
+            # Anchor center: mid-torso (center between shoulders and hips)
+            sho_pts = [raw_pts[k] for k in [11, 12] if k in raw_pts]
+            hip_pts = [raw_pts[k] for k in [23, 24] if k in raw_pts]
+            if sho_pts and hip_pts:
+                mid_sho = np.mean(sho_pts, axis=0)
+                mid_hip = np.mean(hip_pts, axis=0)
+                raw_cx = float((mid_sho[0] + mid_hip[0]) / 2.0)
+                raw_cy = float((mid_sho[1] + mid_hip[1]) / 2.0)
+            else:
+                xs = [p[0] for p in raw_pts.values()]
+                ys = [p[1] for p in raw_pts.values()]
+                raw_cx = float((min(xs) + max(xs)) / 2.0)
+                raw_cy = float((min(ys) + max(ys)) / 2.0)
 
             out = {}
             for idx, (rx, ry) in raw_pts.items():
@@ -462,12 +503,12 @@ class ComparisonEngine:
                 )
             return out
 
-        target_cy = int(height * 0.48)
+        target_cy = int(height * 0.44)
         u_cx = int(width * 0.26)
         p_cx = int(width * 0.74)
 
-        u_pts = _normalize_skeleton(user_landmarks, u_cx, target_cy, target_h=int(height * 0.58))
-        p_pts = _normalize_skeleton(pro_landmarks, p_cx, target_cy, target_h=int(height * 0.58))
+        u_pts = _normalize_skeleton(user_landmarks, u_cx, target_cy, torso_len=u_torso)
+        p_pts = _normalize_skeleton(pro_landmarks, p_cx, target_cy, torso_len=p_torso)
 
         # 2. Draw User Skeleton (Left Stage: Coral Rose #f43f5e, BGR: 94, 63, 244)
         if u_pts:
