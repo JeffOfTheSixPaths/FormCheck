@@ -153,20 +153,20 @@ class SegmentVarianceCard(QFrame):
     def __init__(self, segment_title: str, accent_color: str, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.setObjectName("seg_card")
-        self.setMinimumHeight(84)
+        self.setMinimumHeight(76)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setStyleSheet(
             f"QFrame#seg_card {{ "
             f"  background-color: {THEME.BG_SURFACE}; "
             f"  border: 1px solid {THEME.BORDER_COLOR}; "
             f"  border-radius: {THEME.BORDER_RADIUS}; "
-            f"  padding: 8px 10px; "
+            f"  padding: 6px 8px; "
             f"}}"
         )
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 6, 10, 6)
-        layout.setSpacing(4)
+        layout.setContentsMargins(8, 4, 8, 4)
+        layout.setSpacing(3)
 
         # Header
         h_head = QHBoxLayout()
@@ -317,46 +317,10 @@ class ComparisonScreen(QWidget):
 
     def _init_ui(self) -> None:
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(18, 14, 18, 14)
+        main_layout.setContentsMargins(18, 10, 18, 14)
         main_layout.setSpacing(12)
 
-        # 1. Top Navigation & Header Bar
-        top_bar = QFrame()
-        top_bar.setStyleSheet(
-            f"background-color: {THEME.BG_SURFACE}; border: 1px solid {THEME.BORDER_COLOR}; "
-            f"border-radius: {THEME.BORDER_RADIUS}; padding: 8px 12px;"
-        )
-        tb_layout = QHBoxLayout(top_bar)
-        tb_layout.setContentsMargins(4, 2, 4, 2)
-
-        btn_home = QPushButton("< BACK TO DASHBOARD")
-        btn_home.clicked.connect(lambda: self.navigate_to.emit("home"))
-        tb_layout.addWidget(btn_home)
-
-        lbl_title = QLabel("BIOMECHANICAL COMPARISON LAB")
-        lbl_title.setStyleSheet(
-            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_DISPLAY}; "
-            f"font-size: 14px; font-weight: 800; letter-spacing: 1.2px; margin-left: 10px;"
-        )
-        tb_layout.addWidget(lbl_title)
-
-        lbl_subtitle = QLabel("Dual Geometrical Configuration & Phase Alignment")
-        lbl_subtitle.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px; margin-left: 6px;")
-        tb_layout.addWidget(lbl_subtitle)
-
-        tb_layout.addStretch()
-
-        btn_vault = QPushButton("UPLOAD VAULT")
-        btn_vault.clicked.connect(lambda: self.navigate_to.emit("upload"))
-        tb_layout.addWidget(btn_vault)
-
-        btn_editor = QPushButton("VIDEO EDITOR")
-        btn_editor.clicked.connect(lambda: self.navigate_to.emit("editor"))
-        tb_layout.addWidget(btn_editor)
-
-        main_layout.addWidget(top_bar)
-
-        # 2. Sleek 2-Card Video Selection Deck (User Form on Left | AI Match Center | Pro Reference on Right)
+        # 1. Sleek 2-Card Video Selection Deck (User Form on Left | AI Match Center | Pro Reference on Right)
         selection_deck = QFrame()
         selection_deck.setStyleSheet(
             f"background-color: {THEME.BG_SURFACE}; border: 1px solid {THEME.BORDER_COLOR}; "
@@ -626,23 +590,7 @@ class ComparisonScreen(QWidget):
         sb_layout.addWidget(self.lbl_overall_score)
         telem_layout.addWidget(score_box)
 
-        # Segment 1: Arms Variance
-        self.card_arms = SegmentVarianceCard("Arms & Elbow Angles", THEME.COLOR_SUCCESS_BRIGHT)
-        telem_layout.addWidget(self.card_arms)
-
-        # Segment 2: Shoulders Variance
-        self.card_shoulders = SegmentVarianceCard("Shoulder Tilt & Arm Axis", THEME.PRIMARY_COLOR)
-        telem_layout.addWidget(self.card_shoulders)
-
-        # Segment 3: Hips Variance
-        self.card_hips = SegmentVarianceCard("Hip Flexion & Core Hinge", THEME.COLOR_WARNING)
-        telem_layout.addWidget(self.card_hips)
-
-        # Segment 4: Legs Variance
-        self.card_legs = SegmentVarianceCard("Knee Flexion & Stance Width", THEME.COLOR_DANGER_BRIGHT)
-        telem_layout.addWidget(self.card_legs)
-
-        # Coaching Cue Box
+        # Coaching Cue Box (Placed immediately below Overall Form Match)
         cue_box = QFrame()
         cue_box.setStyleSheet(
             f"background-color: {THEME.BG_SURFACE}; border: 1px solid {THEME.BORDER_COLOR}; "
@@ -664,9 +612,77 @@ class ComparisonScreen(QWidget):
         cb_layout.addWidget(self.lbl_coaching_cue)
         telem_layout.addWidget(cue_box)
 
+        # Collapsible Dropdown Section for Detailed Segment Kinematics (Closed by default!)
+        self.dropdown_frame = QFrame()
+        self.dropdown_frame.setStyleSheet(
+            f"background-color: {THEME.BG_SURFACE}; border: 1px solid {THEME.BORDER_COLOR}; "
+            f"border-radius: {THEME.BORDER_RADIUS}; padding: 6px;"
+        )
+        df_layout = QVBoxLayout(self.dropdown_frame)
+        df_layout.setContentsMargins(6, 6, 6, 6)
+        df_layout.setSpacing(6)
+
+        # Dropdown Header Button
+        self.btn_toggle_details = QPushButton("> DETAILED KINEMATICS [EXPAND]")
+        self.btn_toggle_details.setToolTip("Click to expand/collapse variance and joint angles for Arms, Shoulders, Hips, and Legs")
+        self.btn_toggle_details.setCursor(Qt.PointingHandCursor)
+        self.btn_toggle_details.setStyleSheet(
+            f"QPushButton {{ background-color: {THEME.BG_INPUT}; color: {THEME.TEXT_PRIMARY}; "
+            f"font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; "
+            f"border: 1px solid {THEME.BORDER_COLOR}; border-radius: {THEME.BORDER_RADIUS_SM}; padding: 8px 12px; text-align: left; }} "
+            f"QPushButton:hover {{ background-color: {THEME.BORDER_LIGHT}; border-color: {THEME.PRIMARY_COLOR}; }}"
+        )
+        self.btn_toggle_details.clicked.connect(self._toggle_details_dropdown)
+        df_layout.addWidget(self.btn_toggle_details)
+
+        # Collapsible container - CLOSED BY DEFAULT
+        self.details_container = QWidget()
+        dc_layout = QVBoxLayout(self.details_container)
+        dc_layout.setContentsMargins(0, 4, 0, 0)
+        dc_layout.setSpacing(6)
+
+        # Filter row inside dropdown
+        h_filter = QHBoxLayout()
+        lbl_filt = QLabel("SEGMENT FILTER:")
+        lbl_filt.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 10px; font-weight: 700;")
+        h_filter.addWidget(lbl_filt)
+
+        self.combo_segment_filter = QComboBox()
+        self.combo_segment_filter.addItem("All Segments (4 Regions)", "all")
+        self.combo_segment_filter.addItem("Arms & Elbows", "arms")
+        self.combo_segment_filter.addItem("Shoulder Tilt & Arm Axis", "shoulders")
+        self.combo_segment_filter.addItem("Hip Flexion & Core Hinge", "hips")
+        self.combo_segment_filter.addItem("Knee Flexion & Stance", "legs")
+        self.combo_segment_filter.currentIndexChanged.connect(self._on_segment_filter_changed)
+        h_filter.addWidget(self.combo_segment_filter, stretch=1)
+        dc_layout.addLayout(h_filter)
+
+        # Segment 1: Arms Variance
+        self.card_arms = SegmentVarianceCard("Arms & Elbow Angles", THEME.COLOR_SUCCESS_BRIGHT)
+        dc_layout.addWidget(self.card_arms)
+
+        # Segment 2: Shoulders Variance
+        self.card_shoulders = SegmentVarianceCard("Shoulder Tilt & Arm Axis", THEME.PRIMARY_COLOR)
+        dc_layout.addWidget(self.card_shoulders)
+
+        # Segment 3: Hips Variance
+        self.card_hips = SegmentVarianceCard("Hip Flexion & Core Hinge", THEME.COLOR_WARNING)
+        dc_layout.addWidget(self.card_hips)
+
+        # Segment 4: Legs Variance
+        self.card_legs = SegmentVarianceCard("Knee Flexion & Stance Width", THEME.COLOR_DANGER_BRIGHT)
+        dc_layout.addWidget(self.card_legs)
+
+        # Explicitly set CLOSED by default
+        self.details_container.setVisible(False)
+        df_layout.addWidget(self.details_container)
+
+        telem_layout.addWidget(self.dropdown_frame)
+        telem_layout.addStretch()
+
         telem_scroll = QScrollArea()
         telem_scroll.setWidgetResizable(True)
-        telem_scroll.setFixedWidth(360)
+        telem_scroll.setFixedWidth(385)
         telem_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         telem_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
         telem_scroll.setWidget(telemetry_widget)
@@ -674,6 +690,41 @@ class ComparisonScreen(QWidget):
         main_layout.addWidget(center_widget, stretch=1)
 
         self._populate_vault_dropdowns()
+
+    def _toggle_details_dropdown(self) -> None:
+        """Toggles visibility of the detailed segment kinematics dropdown container."""
+        is_open = not self.details_container.isVisible()
+        self.details_container.setVisible(is_open)
+        if is_open:
+            self.btn_toggle_details.setText("v DETAILED KINEMATICS [COLLAPSE]")
+            self.btn_toggle_details.setStyleSheet(
+                f"QPushButton {{ background-color: {THEME.BG_INPUT}; color: {THEME.PRIMARY_COLOR}; "
+                f"font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; "
+                f"border: 1px solid {THEME.PRIMARY_COLOR}; border-radius: {THEME.BORDER_RADIUS_SM}; padding: 8px 12px; text-align: left; }} "
+                f"QPushButton:hover {{ background-color: {THEME.BORDER_LIGHT}; }}"
+            )
+        else:
+            self.btn_toggle_details.setText("> DETAILED KINEMATICS [EXPAND]")
+            self.btn_toggle_details.setStyleSheet(
+                f"QPushButton {{ background-color: {THEME.BG_INPUT}; color: {THEME.TEXT_PRIMARY}; "
+                f"font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; "
+                f"border: 1px solid {THEME.BORDER_COLOR}; border-radius: {THEME.BORDER_RADIUS_SM}; padding: 8px 12px; text-align: left; }} "
+                f"QPushButton:hover {{ background-color: {THEME.BORDER_LIGHT}; border-color: {THEME.PRIMARY_COLOR}; }}"
+            )
+
+    def _on_segment_filter_changed(self, idx: int) -> None:
+        """Filters which segment cards are shown inside the expanded dropdown."""
+        val = self.combo_segment_filter.currentData()
+        if val == "all":
+            self.card_arms.setVisible(True)
+            self.card_shoulders.setVisible(True)
+            self.card_hips.setVisible(True)
+            self.card_legs.setVisible(True)
+        else:
+            self.card_arms.setVisible(val == "arms")
+            self.card_shoulders.setVisible(val == "shoulders")
+            self.card_hips.setVisible(val == "hips")
+            self.card_legs.setVisible(val == "legs")
 
     def _set_display_mode(self, mode: str) -> None:
         self._display_mode = mode
@@ -699,29 +750,27 @@ class ComparisonScreen(QWidget):
 
     def _populate_vault_dropdowns(self) -> None:
         """Populates vault dropdowns for User and Pro selections separately."""
-        # 1. User dropdown: prioritizes personal user uploads
+        # 1. User dropdown: personal user uploads followed by uploaded vault references
         self.combo_user_vault.blockSignals(True)
         self.combo_user_vault.clear()
         self.combo_user_vault.addItem("-- Select Your Video --", "")
-        user_vids = video_service.get_library(category="personal", user_id=self._user.get("id"))
-        if not user_vids:
-            # Fallback to any videos uploaded in personal category or all user-associated videos
-            user_vids = video_service.get_library(category=None, user_id=self._user.get("id"))
 
-        for v in user_vids:
-            cat = "USER" if v.get("category") == "personal" else "VAULT"
-            self.combo_user_vault.addItem(f"[{cat}] {v.get('title')} ({v.get('sport')})", v.get("file_path"))
+        user_id = self._user.get("id")
+        if user_id:
+            user_personal = video_service.get_library(category="personal", user_id=user_id)
+            for v in user_personal:
+                self.combo_user_vault.addItem(f"[MY DRILL] {v.get('title')} ({v.get('sport')})", v.get("file_path"))
+
+        vault_vids = video_service.get_library(category="pro")
+        for v in vault_vids:
+            self.combo_user_vault.addItem(f"[VAULT] {v.get('title')} ({v.get('sport')})", v.get("file_path"))
         self.combo_user_vault.blockSignals(False)
 
-        # 2. Reference pro dropdown: pro athlete reference library
+        # 2. Reference pro dropdown: only genuine uploaded athlete reference benchmarks
         self.combo_pro_vault.blockSignals(True)
         self.combo_pro_vault.clear()
         self.combo_pro_vault.addItem("-- Select Reference Benchmark --", "")
-        pro_vids = video_service.get_library(category="pro")
-        if not pro_vids:
-            pro_vids = video_service.get_library(category=None)
-
-        for v in pro_vids:
+        for v in vault_vids:
             self.combo_pro_vault.addItem(f"{v.get('title')} ({v.get('sport')})", v.get("file_path"))
         self.combo_pro_vault.blockSignals(False)
 

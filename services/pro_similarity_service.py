@@ -392,11 +392,6 @@ class ProSimilarityService:
 
         # Fetch pro video records from database
         all_pros = db.get_uploaded_videos(category="pro")
-        if not all_pros:
-            # Re-seed if needed
-            from services.video_service import video_service
-            video_service.seed_default_pro_videos()
-            all_pros = db.get_uploaded_videos(category="pro")
 
         # Filter by sport if specified and matches exist
         if sport and sport != "General":

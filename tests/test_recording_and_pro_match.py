@@ -22,22 +22,18 @@ def run_test():
     app = QApplication.instance() or QApplication(sys.argv)
     load_application_fonts()
     app.setStyleSheet(get_stylesheet())
-    print("1. Verifying Pro Athlete Seed Videos in Database & Storage...")
-    video_service.seed_default_pro_videos()
+    print("1. Verifying Pro Athlete Videos in Database & Storage...")
     pros = db.get_uploaded_videos(category="pro")
     print(f"   Found {len(pros)} professional athlete reference videos:")
     for p in pros:
         print(f"   - [{p['sport']}] {p['title']} ({p['file_path']})")
 
-    # Pick a test user video (e.g. sample baseball swing or create a synthetic athletic clip)
-    test_user_path = str(Path("server_storage") / "pro" / "pro_judge_hitting.mp4")
-    if not Path(test_user_path).exists():
-        all_vids = db.get_uploaded_videos()
-        if all_vids:
-            test_user_path = all_vids[0]["file_path"]
+    # Pick an existing test video
+    all_vids = db.get_uploaded_videos()
+    test_user_path = all_vids[0]["file_path"] if all_vids else "WIN_20261003_14_31_28_Pro.mp4"
 
     print(f"\n2. Running AI Pro Recommendation on: {test_user_path}...")
-    report = pro_similarity_service.recommend_pro_athlete(test_user_path, sport="Baseball")
+    report = pro_similarity_service.recommend_pro_athlete(test_user_path)
     assert report is not None, "Report should not be None!"
     assert report.best_match is not None, "Best match should not be None!"
     print(f"   Best Match: {report.best_match.pro_title}")

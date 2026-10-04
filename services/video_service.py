@@ -24,7 +24,6 @@ class VideoService:
 
     def __init__(self) -> None:
         self._ensure_storage_dirs()
-        self.seed_default_pro_videos()
 
     def _ensure_storage_dirs(self) -> None:
         """Creates storage directories if not existing."""
@@ -55,113 +54,8 @@ class VideoService:
         return False
 
     def seed_default_pro_videos(self) -> None:
-        """Seeds initial professional athlete reference clips if table is empty."""
-        try:
-            sample_video = BASE_DIR / "WIN_20261003_14_31_28_Pro.mp4"
-            if not sample_video.exists():
-                return
-
-            existing = db.get_uploaded_videos(category="pro")
-            existing_titles = {v["title"] for v in existing}
-
-            pro_athletes = [
-                # Baseball
-                {
-                    "title": "Shohei Ohtani - Elite Two-Way Mound Delivery (Pitching)",
-                    "sport": "Baseball",
-                    "filename": "pro_ohtani_pitching.mp4",
-                    "thumb": "thumb_pro_ohtani.jpg",
-                    "description": "Explosive linear-to-rotational transfer, high 90/90 arm cocking, and powerful lead-leg blocking.",
-                },
-                {
-                    "title": "Aaron Judge - Rotational Power Mechanics (Hitting)",
-                    "sport": "Baseball",
-                    "filename": "pro_judge_hitting.mp4",
-                    "thumb": "thumb_pro_judge.jpg",
-                    "description": "Massive hip-to-shoulder rotational separation, upright axis, and slotted barrel path.",
-                },
-                {
-                    "title": "Mookie Betts - Compact Rotational Whip (Hitting)",
-                    "sport": "Baseball",
-                    "filename": "pro_betts_hitting.mp4",
-                    "thumb": "thumb_pro_betts.jpg",
-                    "description": "Low center of gravity, rapid hip initiation, and inside-out barrel path with balanced follow-through.",
-                },
-                {
-                    "title": "Nolan Arenado - Low Base Infield Mechanics (Fielding)",
-                    "sport": "Baseball",
-                    "filename": "pro_arenado_fielding.mp4",
-                    "thumb": "thumb_pro_arenado.jpg",
-                    "description": "Deep hip hinge and knee sink, presenting glove well in front of feet, with rapid funnel transfer.",
-                },
-                # Volleyball
-                {
-                    "title": "Yuji Nishida - Explosive Spike Approach & Vertical Jump",
-                    "sport": "Volleyball",
-                    "filename": "pro_nishida_approach.mp4",
-                    "thumb": "thumb_pro_nishida.jpg",
-                    "description": "Ultra-deep penultimate knee load (85°-95°), aggressive double arm backswing, and 40+ inch vertical leap.",
-                },
-                {
-                    "title": "Earvin N'Gapeth - Dynamic High-Elbow Arm Swing",
-                    "sport": "Volleyball",
-                    "filename": "pro_ngapeth_armswing.mp4",
-                    "thumb": "thumb_pro_ngapeth.jpg",
-                    "description": "High elbow draw above shoulder level, full high-point reach extension, and dynamic wrist snap.",
-                },
-                {
-                    "title": "Jenia Grebennikov - Locked Platform Forearm Pass",
-                    "sport": "Volleyball",
-                    "filename": "pro_grebennikov_passing.mp4",
-                    "thumb": "thumb_pro_grebennikov.jpg",
-                    "description": "Laser-locked straight elbows (175°+), shrug platform angle, and leg-driven lift through the ball.",
-                },
-                {
-                    "title": "Micah Christenson - Precision Overhead Setting Window",
-                    "sport": "Volleyball",
-                    "filename": "pro_christenson_setting.mp4",
-                    "thumb": "thumb_pro_christenson.jpg",
-                    "description": "Overhead setting triangle 8 inches above forehead, symmetrical elbow cushioning, and soft wrist extension.",
-                },
-                # Foundational
-                {
-                    "title": "Elite Barbell Squat Mechanics (Pro Reference)",
-                    "sport": "Squat / Strength",
-                    "filename": "pro_squat_mechanics.mp4",
-                    "thumb": "thumb_pro_squat.jpg",
-                    "description": "Optimal parallel depth, neutral lumbar spine, and synchronized knee/hip extension.",
-                },
-            ]
-
-            info_sample = CameraService.get_video_info(str(sample_video)) or {}
-
-            for athlete in pro_athletes:
-                if athlete["title"] in existing_titles:
-                    continue
-
-                dest_file = PRO_DIR / athlete["filename"]
-                if not dest_file.exists():
-                    shutil.copy2(sample_video, dest_file)
-
-                thumb_file = THUMBNAIL_DIR / athlete["thumb"]
-                self.generate_thumbnail(str(dest_file), str(thumb_file))
-
-                db.add_uploaded_video(
-                    title=athlete["title"],
-                    category="pro",
-                    sport=athlete["sport"],
-                    file_path=str(dest_file),
-                    thumbnail_path=str(thumb_file) if thumb_file.exists() else None,
-                    fps=info_sample.get("fps", 26.0),
-                    total_frames=info_sample.get("total_frames", 108),
-                    duration_seconds=info_sample.get("duration_seconds", 4.2),
-                    resolution=f"{info_sample.get('width', 1920)}x{info_sample.get('height', 1080)}",
-                    description=athlete["description"],
-                )
-
-            logger.info("Successfully seeded professional athlete video archive.")
-        except Exception as e:
-            logger.error("Error seeding default pro videos: %s", e)
+        """Disabled: only genuine locally uploaded athlete reference videos are maintained."""
+        pass
 
     def upload_video(
         self,
