@@ -59,7 +59,18 @@ class ComparisonEngine:
         """Calculates 3D interior angles for all defined joints."""
         coords = {}
         for idx, lm in enumerate(landmarks):
-            coords[idx] = np.array([lm.x, lm.y, lm.z])
+            if isinstance(lm, dict):
+                coords[idx] = np.array([
+                    float(lm.get("x", 0.0)),
+                    float(lm.get("y", 0.0)),
+                    float(lm.get("z", 0.0))
+                ])
+            else:
+                coords[idx] = np.array([
+                    float(getattr(lm, "x", 0.0)),
+                    float(getattr(lm, "y", 0.0)),
+                    float(getattr(lm, "z", 0.0))
+                ])
 
         angles = {}
         for joint_key, (idx_a, idx_b, idx_c, _) in JOINT_DEFINITIONS.items():
@@ -74,12 +85,12 @@ class ComparisonEngine:
             if trunk is not None:
                 angles["trunk_lean"] = float(trunk)
 
-        # Shoulder line tilt relative to horizontal
+        # Shoulder line tilt relative to horizontal (acute angle)
         if 11 in coords and 12 in coords:
-            dx = coords[12][0] - coords[11][0]
-            dy = coords[12][1] - coords[11][1]
+            dx = abs(coords[12][0] - coords[11][0])
+            dy = abs(coords[12][1] - coords[11][1])
             tilt = np.degrees(np.arctan2(dy, dx))
-            angles["shoulder_tilt"] = float(abs(tilt))
+            angles["shoulder_tilt"] = float(tilt)
 
         # Stance width normalized to hip width
         if all(k in coords for k in [23, 24, 27, 28]):
@@ -89,6 +100,39 @@ class ComparisonEngine:
                 angles["stance_ratio"] = float(ankle_w / hip_w)
 
         return angles
+
+    @staticmethod
+    def mirror_landmarks(landmarks: Optional[List]) -> Optional[List]:
+        """Horizontally mirrors landmarks (x' = 1.0 - x, z' = -z, y' = y).
+        Preserves landmark structure and indices so 3D angles and joints match.
+        """
+        if not landmarks:
+            return None
+        mirrored = []
+        for lm in landmarks:
+            if isinstance(lm, dict):
+                c = dict(lm)
+                c["x"] = 1.0 - float(c.get("x", 0.0))
+                if "z" in c:
+                    c["z"] = -float(c.get("z", 0.0))
+                mirrored.append(c)
+            else:
+                class MirroredLandmark:
+                    def __init__(self, x: float, y: float, z: float, visibility: float = 1.0, presence: float = 1.0):
+                        self.x = x
+                        self.y = y
+                        self.z = z
+                        self.visibility = visibility
+                        self.presence = presence
+                x = 1.0 - float(getattr(lm, "x", 0.0))
+                y = float(getattr(lm, "y", 0.0))
+                z = -float(getattr(lm, "z", 0.0))
+                raw_vis = getattr(lm, "visibility", 1.0)
+                raw_pres = getattr(lm, "presence", 1.0)
+                vis = float(raw_vis if raw_vis is not None else 1.0)
+                pres = float(raw_pres if raw_pres is not None else 1.0)
+                mirrored.append(MirroredLandmark(x, y, z, vis, pres))
+        return mirrored
 
     @classmethod
     def compare_frames(
