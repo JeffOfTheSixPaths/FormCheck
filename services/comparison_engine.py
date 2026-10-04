@@ -348,6 +348,186 @@ class ComparisonEngine:
 
         return canvas
 
+    @classmethod
+    def render_geometric_side_by_side(
+        cls,
+        user_landmarks: Optional[List],
+        pro_landmarks: Optional[List],
+        user_angles: Dict[str, float],
+        pro_angles: Dict[str, float],
+        metrics: Optional[ComparisonMetrics] = None,
+        width: int = 1280,
+        height: int = 720,
+        user_label: str = "YOUR ATHLETIC GEOMETRY",
+        pro_label: str = "REFERENCE BENCHMARK GEOMETRY",
+        phase_pct: float = 0.0,
+    ) -> np.ndarray:
+        """
+        Renders a dedicated, high-tech dual geometric biomechanical stage.
+        Both human skeletons are placed side-by-side in normalized 3D space,
+        calibrated to the exact same anatomical scale and ground level.
+        Prevents visual occlusion/collision and draws clean disparity vectors
+        and angular readouts between corresponding limbs.
+        """
+        canvas = np.full((height, width, 3), (18, 14, 13), dtype=np.uint8)
+
+        # 1. Perspective Floor Grid and Stage Axes
+        floor_y = int(height * 0.78)
+        cv2.line(canvas, (40, floor_y), (width - 40, floor_y), (45, 38, 35), 1, cv2.LINE_AA)
+        for gx in range(60, width - 40, 70):
+            cv2.line(canvas, (gx, floor_y), (int(gx * 1.08) - 40, height - 10), (32, 27, 25), 1, cv2.LINE_AA)
+        for gy in range(floor_y + 25, height - 10, 25):
+            cv2.line(canvas, (40, gy), (width - 40, gy), (28, 24, 22), 1, cv2.LINE_AA)
+
+        # Center dividing dotted axis
+        mid_x = width // 2
+        for my in range(70, height - 60, 16):
+            cv2.line(canvas, (mid_x, my), (mid_x, my + 8), (45, 40, 38), 1, cv2.LINE_AA)
+
+        def _normalize_skeleton(lms, target_cx, target_cy, target_h=420):
+            if not lms:
+                return {}
+            raw_pts = {}
+            for idx, lm in enumerate(lms):
+                if isinstance(lm, dict):
+                    vis = lm.get("visibility", lm.get("v", 1.0))
+                    if vis is None or vis > 0.20:
+                        raw_pts[idx] = (float(lm["x"]), float(lm["y"]))
+                elif lm is not None:
+                    vis = getattr(lm, "visibility", 1.0)
+                    if vis is None or vis > 0.20:
+                        raw_pts[idx] = (float(lm.x), float(lm.y))
+
+            if not raw_pts:
+                return {}
+
+            ys = [p[1] for p in raw_pts.values()]
+            xs = [p[0] for p in raw_pts.values()]
+            raw_h = max(0.01, max(ys) - min(ys))
+            raw_cx = (min(xs) + max(xs)) / 2.0
+            raw_cy = (min(ys) + max(ys)) / 2.0
+
+            scale = target_h / raw_h
+            scale = max(240.0, min(800.0, scale))
+
+            out = {}
+            for idx, (rx, ry) in raw_pts.items():
+                out[idx] = (
+                    int(target_cx + (rx - raw_cx) * scale),
+                    int(target_cy + (ry - raw_cy) * scale),
+                )
+            return out
+
+        target_cy = int(height * 0.48)
+        u_cx = int(width * 0.26)
+        p_cx = int(width * 0.74)
+
+        u_pts = _normalize_skeleton(user_landmarks, u_cx, target_cy, target_h=int(height * 0.58))
+        p_pts = _normalize_skeleton(pro_landmarks, p_cx, target_cy, target_h=int(height * 0.58))
+
+        # 2. Draw User Skeleton (Left Stage: Coral Rose #f43f5e, BGR: 94, 63, 244)
+        if u_pts:
+            cls._draw_skeleton_lines(canvas, u_pts, color_bgr=(94, 63, 244), thickness=3)
+            # Head circle
+            if 0 in u_pts:
+                cv2.circle(canvas, u_pts[0], 18, (94, 63, 244), 2, cv2.LINE_AA)
+            for idx, pt in u_pts.items():
+                cv2.circle(canvas, pt, 6, (94, 63, 244), -1, cv2.LINE_AA)
+                cv2.circle(canvas, pt, 3, (255, 255, 255), -1, cv2.LINE_AA)
+        else:
+            cv2.putText(canvas, "NO USER SKELETON DETECTED", (u_cx - 130, target_cy), cv2.FONT_HERSHEY_SIMPLEX, 0.44, (70, 65, 65), 1, cv2.LINE_AA)
+
+        # 3. Draw Pro/Reference Skeleton (Right Stage: Neon Cyan #00f0ff, BGR: 255, 240, 0)
+        if p_pts:
+            cls._draw_skeleton_lines(canvas, p_pts, color_bgr=(255, 240, 0), thickness=3)
+            # Head circle
+            if 0 in p_pts:
+                cv2.circle(canvas, p_pts[0], 18, (255, 240, 0), 2, cv2.LINE_AA)
+            for idx, pt in p_pts.items():
+                cv2.circle(canvas, pt, 6, (255, 240, 0), -1, cv2.LINE_AA)
+                cv2.circle(canvas, pt, 3, (255, 255, 255), -1, cv2.LINE_AA)
+        else:
+            cv2.putText(canvas, "NO REFERENCE SKELETON DETECTED", (p_cx - 150, target_cy), cv2.FONT_HERSHEY_SIMPLEX, 0.44, (70, 65, 65), 1, cv2.LINE_AA)
+
+        # 4. Joint Angle Readout Badges
+        # User Limb Angles
+        if u_pts and user_angles:
+            if 14 in u_pts and "right_elbow" in user_angles:
+                cv2.putText(canvas, f"R Elbow: {user_angles['right_elbow']:.0f} deg", (u_pts[14][0] - 110, u_pts[14][1] - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (230, 230, 235), 1, cv2.LINE_AA)
+            if 13 in u_pts and "left_elbow" in user_angles:
+                cv2.putText(canvas, f"L Elbow: {user_angles['left_elbow']:.0f} deg", (u_pts[13][0] + 12, u_pts[13][1] - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (230, 230, 235), 1, cv2.LINE_AA)
+            if 26 in u_pts and "right_knee" in user_angles:
+                cv2.putText(canvas, f"R Knee: {user_angles['right_knee']:.0f} deg", (u_pts[26][0] - 105, u_pts[26][1] + 16), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (230, 230, 235), 1, cv2.LINE_AA)
+
+        # Reference Limb Angles
+        if p_pts and pro_angles:
+            if 14 in p_pts and "right_elbow" in pro_angles:
+                cv2.putText(canvas, f"R Elbow: {pro_angles['right_elbow']:.0f} deg", (p_pts[14][0] + 12, p_pts[14][1] - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (255, 240, 0), 1, cv2.LINE_AA)
+            if 13 in p_pts and "left_elbow" in pro_angles:
+                cv2.putText(canvas, f"L Elbow: {pro_angles['left_elbow']:.0f} deg", (p_pts[13][0] - 110, p_pts[13][1] - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (255, 240, 0), 1, cv2.LINE_AA)
+            if 26 in p_pts and "right_knee" in pro_angles:
+                cv2.putText(canvas, f"R Knee: {pro_angles['right_knee']:.0f} deg", (p_pts[26][0] + 12, p_pts[26][1] + 16), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (255, 240, 0), 1, cv2.LINE_AA)
+
+        # 5. Central Disparity Telemetry Links (Across the Middle Corridor)
+        corridor_joints = [
+            (11, 11, "Shoulders"),
+            (12, 12, "Shoulders"),
+            (13, 13, "L Elbow"),
+            (14, 14, "R Elbow"),
+            (23, 23, "Hips"),
+            (24, 24, "Hips"),
+            (25, 25, "L Knee"),
+            (26, 26, "R Knee"),
+        ]
+        for uj_idx, pj_idx, joint_name in corridor_joints:
+            if uj_idx in u_pts and pj_idx in p_pts:
+                p1 = u_pts[uj_idx]
+                p2 = p_pts[pj_idx]
+                # Center connection segment
+                x_start = p1[0] + 14
+                x_end = p2[0] - 14
+                if x_end > x_start:
+                    # Calculate vertical delta to gauge level difference
+                    y_diff = abs(p1[1] - p2[1])
+                    line_col = (0, 220, 100) if y_diff < 16 else ((0, 190, 255) if y_diff < 36 else (94, 63, 244))
+                    cv2.line(canvas, (x_start, p1[1]), (mid_x - 30, (p1[1] + p2[1]) // 2), line_col, 1, cv2.LINE_AA)
+                    cv2.line(canvas, (mid_x + 30, (p1[1] + p2[1]) // 2), (x_end, p2[1]), line_col, 1, cv2.LINE_AA)
+
+        # 6. Header Badges
+        # User Header (Top Left)
+        cv2.rectangle(canvas, (24, 18), (320, 56), (28, 22, 21), -1)
+        cv2.rectangle(canvas, (24, 18), (320, 56), (94, 63, 244), 1)
+        cv2.putText(canvas, user_label, (36, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.44, (94, 63, 244), 1, cv2.LINE_AA)
+
+        # Reference Header (Top Right)
+        cv2.rectangle(canvas, (width - 340, 18), (width - 24, 56), (28, 22, 21), -1)
+        cv2.rectangle(canvas, (width - 340, 18), (width - 24, 56), (255, 240, 0), 1)
+        cv2.putText(canvas, pro_label, (width - 328, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.44, (255, 240, 0), 1, cv2.LINE_AA)
+
+        # Center Movement Phase Badge
+        p_text = f"MOVEMENT PHASE: {int(phase_pct * 100)}%"
+        cv2.rectangle(canvas, (mid_x - 110, 18), (mid_x + 110, 56), (28, 22, 21), -1)
+        cv2.rectangle(canvas, (mid_x - 110, 18), (mid_x + 110, 56), (80, 75, 72), 1)
+        cv2.putText(canvas, p_text, (mid_x - 94, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.44, (240, 240, 245), 1, cv2.LINE_AA)
+
+        # 7. Bottom Biomechanical Score Strip
+        if metrics:
+            score_bar_y = height - 46
+            cv2.rectangle(canvas, (24, score_bar_y), (width - 24, height - 14), (24, 20, 18), -1)
+            cv2.rectangle(canvas, (24, score_bar_y), (width - 24, height - 14), (55, 48, 45), 1)
+
+            ov_text = f"OVERALL MATCH: {metrics.overall_score:.0f}%"
+            cv2.putText(canvas, ov_text, (38, score_bar_y + 22), cv2.FONT_HERSHEY_SIMPLEX, 0.46, (0, 230, 120), 1, cv2.LINE_AA)
+
+            seg_text = f"ARMS: {metrics.arms.match_percentage:.0f}%  |  SHOULDERS: {metrics.shoulders.match_percentage:.0f}%  |  HIPS: {metrics.hips.match_percentage:.0f}%  |  LEGS: {metrics.legs.match_percentage:.0f}%"
+            cv2.putText(canvas, seg_text, (260, score_bar_y + 22), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (180, 180, 190), 1, cv2.LINE_AA)
+
+            if metrics.primary_coaching_cue:
+                cue_s = metrics.primary_coaching_cue[:55] + "..." if len(metrics.primary_coaching_cue) > 55 else metrics.primary_coaching_cue
+                cv2.putText(canvas, cue_s, (width - 440, score_bar_y + 22), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (255, 210, 0), 1, cv2.LINE_AA)
+
+        return canvas
+
     @staticmethod
     def _draw_skeleton_lines(frame: np.ndarray, pts: Dict[int, Tuple[int, int]], color_bgr: Tuple[int, int, int], thickness: int = 2):
         """Draws standard skeletal linkages."""

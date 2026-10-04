@@ -1,5 +1,5 @@
-"""Comparison screen providing dual video loading (local/online), direct skeleton overlay,
-and biomechanical variance analysis across Arms, Shoulders, Hips, and Legs."""
+"""Comparison screen providing dual video loading (local/vault), synchronized biomechanical
+geometry visualization, direct skeleton overlay, and variance analysis across Arms, Shoulders, Hips, and Legs."""
 
 import logging
 from pathlib import Path
@@ -11,6 +11,7 @@ from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QButtonGroup,
+    QCheckBox,
     QComboBox,
     QFileDialog,
     QFrame,
@@ -41,14 +42,14 @@ logger = logging.getLogger(__name__)
 
 
 class ComparisonViewport(QWidget):
-    """Viewport rendering either direct skeleton overlay or synchronized side-by-side video feeds."""
+    """Viewport rendering side-by-side biomechanical geometries, direct ghost overlay, or split video feeds."""
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setMinimumSize(600, 360)
 
-        self._mode: str = "overlay"  # "overlay" or "split"
+        self._mode: str = "geom"  # "geom", "overlay", or "split"
         self._overlay_pixmap: Optional[QPixmap] = None
         self._user_pixmap: Optional[QPixmap] = None
         self._pro_pixmap: Optional[QPixmap] = None
@@ -83,14 +84,15 @@ class ComparisonViewport(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.fillRect(self.rect(), QColor(THEME.BG_BASE))
 
-        if self._mode == "overlay":
+        if self._mode in ("geom", "overlay"):
             if self._overlay_pixmap and not self._overlay_pixmap.isNull():
                 scaled = self._overlay_pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 ox = (self.width() - scaled.width()) // 2
                 oy = (self.height() - scaled.height()) // 2
                 painter.drawPixmap(ox, oy, scaled)
             else:
-                self._draw_placeholder(painter, "SELECT USER AND REFERENCE VIDEOS TO RUN DIRECT OVERLAY")
+                msg = "SELECT VIDEOS TO VIEW BIOMECHANICAL GEOMETRY" if self._mode == "geom" else "SELECT VIDEOS TO RUN SKELETAL OVERLAY"
+                self._draw_placeholder(painter, msg)
 
         elif self._mode == "split":
             half_w = (self.width() - 8) // 2
@@ -151,7 +153,7 @@ class SegmentVarianceCard(QFrame):
     def __init__(self, segment_title: str, accent_color: str, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.setObjectName("seg_card")
-        self.setMinimumHeight(86)
+        self.setMinimumHeight(84)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setStyleSheet(
             f"QFrame#seg_card {{ "
@@ -170,7 +172,7 @@ class SegmentVarianceCard(QFrame):
         h_head = QHBoxLayout()
         lbl_name = QLabel(segment_title.upper())
         lbl_name.setStyleSheet(
-            f"color: {accent_color}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 1px;"
+            f"color: {accent_color}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 0.8px;"
         )
         h_head.addWidget(lbl_name)
         h_head.addStretch()
@@ -188,20 +190,20 @@ class SegmentVarianceCard(QFrame):
         self.lbl_var.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-weight: 600;")
         h_stats.addWidget(self.lbl_var)
 
-        self.lbl_delta = QLabel("Delta: 0.0°")
+        self.lbl_delta = QLabel("Delta: 0.0 deg")
         self.lbl_delta.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-weight: 600;")
         h_stats.addWidget(self.lbl_delta)
         layout.addLayout(h_stats)
 
         # Progress bar
         self.bar = QProgressBar()
-        self.bar.setFixedHeight(8)
+        self.bar.setFixedHeight(6)
         self.bar.setTextVisible(False)
         self.bar.setRange(0, 100)
         self.bar.setValue(100)
         self.bar.setStyleSheet(
-            f"QProgressBar {{ background-color: {THEME.BG_INPUT}; border-radius: 4px; border: none; }} "
-            f"QProgressBar::chunk {{ background-color: {accent_color}; border-radius: 4px; }}"
+            f"QProgressBar {{ background-color: {THEME.BG_INPUT}; border-radius: 3px; border: none; }} "
+            f"QProgressBar::chunk {{ background-color: {accent_color}; border-radius: 3px; }}"
         )
         layout.addWidget(self.bar)
 
@@ -213,13 +215,14 @@ class SegmentVarianceCard(QFrame):
     def update_metrics(self, var_val: float, delta_val: float, score: float, details_text: str) -> None:
         self.lbl_score.setText(f"{score:.0f}%")
         self.lbl_var.setText(f"Var: {var_val:.2f}")
-        self.lbl_delta.setText(f"Delta: {delta_val:.1f}°")
+        self.lbl_delta.setText(f"Delta: {delta_val:.1f} deg")
         self.bar.setValue(int(score))
         self.lbl_detail.setText(details_text)
 
 
 class ComparisonScreen(QWidget):
-    """Screen for loading User vs Pro videos, running dual skeletal overlay, and viewing variance across all 4 segments."""
+    """Screen for loading User vs Reference videos, running clean side-by-side geometric comparison,
+    ghost skeletal overlay, and analyzing variance across Arms, Shoulders, Hips, and Legs."""
 
     navigate_to = Signal(str)  # 'home', 'upload', 'editor', 'drill'
 
@@ -238,10 +241,12 @@ class ComparisonScreen(QWidget):
 
         self._user_total_frames: int = 0
         self._pro_total_frames: int = 0
-        self._max_frames: int = 0
 
+        self._last_user_frame: Optional[np.ndarray] = None
+        self._last_pro_frame: Optional[np.ndarray] = None
+
+        self._display_mode: str = "geom"  # "geom" (default), "overlay", or "split"
         self._is_playing: bool = False
-        self._playback_speed: float = 1.0
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._on_play_step)
@@ -261,13 +266,15 @@ class ComparisonScreen(QWidget):
             self._user_cap.release()
         self._user_cap = cv2.VideoCapture(file_path)
         self._user_total_frames = int(self._user_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self._last_user_frame = None
 
         # Retrieve or pre-compute saved geometry for video
         self._user_geometry = geometry_cache.get_or_compute_geometry(file_path)
         if self._user_geometry and self._user_geometry.get("total_frames"):
             self._user_total_frames = max(self._user_total_frames, self._user_geometry["total_frames"])
 
-        self.lbl_user_loaded.setText(f"Loaded: {Path(file_path).name} ({self._user_total_frames} frames)")
+        self.lbl_user_loaded.setText(f"Ready: {Path(file_path).name} ({self._user_total_frames} frames)")
+        self.lbl_user_loaded.setStyleSheet(f"color: {THEME.COLOR_SUCCESS_BRIGHT}; font-size: 11px; font-weight: 600;")
 
         # Sync combo if present
         for i in range(self.combo_user_vault.count()):
@@ -277,7 +284,6 @@ class ComparisonScreen(QWidget):
                 self.combo_user_vault.blockSignals(False)
                 break
 
-        self._update_timeline_bounds()
         self._render_current_frame()
 
     def load_pro_video(self, file_path: str) -> None:
@@ -289,13 +295,15 @@ class ComparisonScreen(QWidget):
             self._pro_cap.release()
         self._pro_cap = cv2.VideoCapture(file_path)
         self._pro_total_frames = int(self._pro_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self._last_pro_frame = None
 
         # Retrieve or pre-compute saved geometry for reference video
         self._pro_geometry = geometry_cache.get_or_compute_geometry(file_path)
         if self._pro_geometry and self._pro_geometry.get("total_frames"):
             self._pro_total_frames = max(self._pro_total_frames, self._pro_geometry["total_frames"])
 
-        self.lbl_pro_loaded.setText(f"Loaded: {Path(file_path).name} ({self._pro_total_frames} frames)")
+        self.lbl_pro_loaded.setText(f"Ready: {Path(file_path).name} ({self._pro_total_frames} frames)")
+        self.lbl_pro_loaded.setStyleSheet(f"color: {THEME.PRIMARY_COLOR}; font-size: 11px; font-weight: 600;")
 
         # Sync combo if present
         for i in range(self.combo_pro_vault.count()):
@@ -305,33 +313,37 @@ class ComparisonScreen(QWidget):
                 self.combo_pro_vault.blockSignals(False)
                 break
 
-        self._update_timeline_bounds()
         self._render_current_frame()
 
     def _init_ui(self) -> None:
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(20, 16, 20, 16)
+        main_layout.setContentsMargins(18, 14, 18, 14)
         main_layout.setSpacing(12)
 
-        # 1. Top Navigation Bar
+        # 1. Top Navigation & Header Bar
         top_bar = QFrame()
         top_bar.setStyleSheet(
             f"background-color: {THEME.BG_SURFACE}; border: 1px solid {THEME.BORDER_COLOR}; "
-            f"border-radius: {THEME.BORDER_RADIUS}; padding: 10px 14px;"
+            f"border-radius: {THEME.BORDER_RADIUS}; padding: 8px 12px;"
         )
         tb_layout = QHBoxLayout(top_bar)
         tb_layout.setContentsMargins(4, 2, 4, 2)
 
-        btn_home = QPushButton("< BACK TO HOME")
+        btn_home = QPushButton("< BACK TO DASHBOARD")
         btn_home.clicked.connect(lambda: self.navigate_to.emit("home"))
         tb_layout.addWidget(btn_home)
 
-        lbl_title = QLabel("PRO ATHLETE BIOMECHANICAL COMPARISON & SKELETAL OVERLAY")
+        lbl_title = QLabel("BIOMECHANICAL COMPARISON LAB")
         lbl_title.setStyleSheet(
-            f"color: {THEME.COLOR_DANGER_BRIGHT}; font-family: {THEME.FONT_FAMILY_DISPLAY}; "
-            f"font-size: 15px; font-weight: 800; letter-spacing: 1.2px; margin-left: 10px;"
+            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_DISPLAY}; "
+            f"font-size: 14px; font-weight: 800; letter-spacing: 1.2px; margin-left: 10px;"
         )
         tb_layout.addWidget(lbl_title)
+
+        lbl_subtitle = QLabel("Dual Geometrical Configuration & Phase Alignment")
+        lbl_subtitle.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px; margin-left: 6px;")
+        tb_layout.addWidget(lbl_subtitle)
+
         tb_layout.addStretch()
 
         btn_vault = QPushButton("UPLOAD VAULT")
@@ -344,60 +356,62 @@ class ComparisonScreen(QWidget):
 
         main_layout.addWidget(top_bar)
 
-        # 2. Dual Video Loading Bar (User Video on Left | AI Pro Match in Center | Pro Video on Right)
-        loaders_frame = QFrame()
-        loaders_frame.setStyleSheet(
+        # 2. Sleek 2-Card Video Selection Deck (User Form on Left | AI Match Center | Pro Reference on Right)
+        selection_deck = QFrame()
+        selection_deck.setStyleSheet(
             f"background-color: {THEME.BG_SURFACE}; border: 1px solid {THEME.BORDER_COLOR}; "
-            f"border-radius: {THEME.BORDER_RADIUS}; padding: 10px 14px;"
+            f"border-radius: {THEME.BORDER_RADIUS}; padding: 8px 12px;"
         )
-        lf_layout = QHBoxLayout(loaders_frame)
-        lf_layout.setSpacing(14)
+        deck_layout = QHBoxLayout(selection_deck)
+        deck_layout.setSpacing(12)
+        deck_layout.setContentsMargins(8, 6, 8, 6)
 
-        # 2A. User Video Slot
+        # Slot 1: User Form Card
         v_user = QVBoxLayout()
-        v_user.setSpacing(6)
-        lbl_u_title = QLabel("1. YOUR ATHLETIC VIDEO (PERSONAL / LOCAL / ONLINE):")
+        v_user.setSpacing(4)
+        h_u_hdr = QHBoxLayout()
+        lbl_u_title = QLabel("1. YOUR ATHLETIC FORM")
         lbl_u_title.setStyleSheet(
-            f"color: {THEME.COLOR_DANGER_BRIGHT}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800;"
+            f"color: {THEME.COLOR_DANGER_BRIGHT}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 0.6px;"
         )
-        v_user.addWidget(lbl_u_title)
+        h_u_hdr.addWidget(lbl_u_title)
+        h_u_hdr.addStretch()
 
-        h_u_btns = QHBoxLayout()
-        btn_u_local = QPushButton("CHOOSE LOCAL...")
+        btn_u_local = QPushButton("+ BROWSE LOCAL")
+        btn_u_local.setStyleSheet(
+            f"QPushButton {{ background-color: {THEME.BG_INPUT}; color: {THEME.TEXT_PRIMARY}; "
+            f"font-size: 10px; font-weight: 700; border: 1px solid {THEME.BORDER_COLOR}; "
+            f"border-radius: {THEME.BORDER_RADIUS_SM}; padding: 3px 8px; }} "
+            f"QPushButton:hover {{ background-color: {THEME.BORDER_LIGHT}; border-color: {THEME.COLOR_DANGER_BRIGHT}; }}"
+        )
         btn_u_local.clicked.connect(self._on_browse_user_local)
-        h_u_btns.addWidget(btn_u_local)
+        h_u_hdr.addWidget(btn_u_local)
+        v_user.addLayout(h_u_hdr)
 
         self.combo_user_vault = QComboBox()
-        self.combo_user_vault.addItem("-- Choose from Vault --", "")
+        self.combo_user_vault.setMinimumHeight(30)
+        self.combo_user_vault.addItem("-- Select Your Video --", "")
         self.combo_user_vault.currentIndexChanged.connect(self._on_user_vault_selected)
-        h_u_btns.addWidget(self.combo_user_vault)
-        v_user.addLayout(h_u_btns)
+        v_user.addWidget(self.combo_user_vault)
 
-        self.lbl_user_loaded = QLabel("No user video loaded")
-        self.lbl_user_loaded.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px;")
+        self.lbl_user_loaded = QLabel("No video selected")
+        self.lbl_user_loaded.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 10px;")
         v_user.addWidget(self.lbl_user_loaded)
-        lf_layout.addLayout(v_user, stretch=5)
+        deck_layout.addLayout(v_user, stretch=5)
 
-        # Center AI Matchmaker Column
+        # Center: AI Matchmaker Button
         v_div1 = QFrame()
         v_div1.setFrameShape(QFrame.VLine)
         v_div1.setStyleSheet(f"color: {THEME.BORDER_COLOR};")
-        lf_layout.addWidget(v_div1)
+        deck_layout.addWidget(v_div1)
 
         v_ai_match = QVBoxLayout()
         v_ai_match.setAlignment(Qt.AlignCenter)
-        v_ai_match.setSpacing(4)
-
-        lbl_ai_hdr = QLabel("AI FORM BENCHMARK")
-        lbl_ai_hdr.setStyleSheet(
-            f"color: {THEME.COLOR_WARNING}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 10px; font-weight: 800; letter-spacing: 0.8px;"
-        )
-        lbl_ai_hdr.setAlignment(Qt.AlignCenter)
-        v_ai_match.addWidget(lbl_ai_hdr)
+        v_ai_match.setSpacing(3)
 
         self.btn_find_pro = QPushButton("AI PRO MATCH")
-        self.btn_find_pro.setToolTip("Calculate appendage angle variance cosine similarity and find your closest professional athlete form match")
-        self.btn_find_pro.setMinimumHeight(36)
+        self.btn_find_pro.setToolTip("Compare your appendage angular variances against professional athlete database to find your closest match.")
+        self.btn_find_pro.setMinimumHeight(34)
         self.btn_find_pro.setStyleSheet(
             f"QPushButton {{ background-color: {THEME.COLOR_WARNING}; color: #09090b; "
             f"font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; "
@@ -407,123 +421,175 @@ class ComparisonScreen(QWidget):
         self.btn_find_pro.clicked.connect(self._on_find_closest_pro)
         v_ai_match.addWidget(self.btn_find_pro)
 
-        lbl_ai_sub = QLabel("Appendage Variance + Waveform")
+        lbl_ai_sub = QLabel("Auto-Detect Closest Pro Form")
         lbl_ai_sub.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 9px;")
         lbl_ai_sub.setAlignment(Qt.AlignCenter)
         v_ai_match.addWidget(lbl_ai_sub)
-
-        lf_layout.addLayout(v_ai_match, stretch=0)
+        deck_layout.addLayout(v_ai_match, stretch=0)
 
         v_div2 = QFrame()
         v_div2.setFrameShape(QFrame.VLine)
         v_div2.setStyleSheet(f"color: {THEME.BORDER_COLOR};")
-        lf_layout.addWidget(v_div2)
+        deck_layout.addWidget(v_div2)
 
-        # 2B. Reference / Comparison Video Slot
+        # Slot 2: Reference Benchmark Card
         v_pro = QVBoxLayout()
-        v_pro.setSpacing(6)
-        lbl_p_title = QLabel("2. REFERENCE VIDEO TO COMPARE (LOCAL / VAULT):")
+        v_pro.setSpacing(4)
+        h_p_hdr = QHBoxLayout()
+        lbl_p_title = QLabel("2. REFERENCE BENCHMARK")
         lbl_p_title.setStyleSheet(
-            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800;"
+            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 0.6px;"
         )
-        v_pro.addWidget(lbl_p_title)
+        h_p_hdr.addWidget(lbl_p_title)
+        h_p_hdr.addStretch()
 
-        h_p_btns = QHBoxLayout()
-        btn_p_local = QPushButton("CHOOSE LOCAL...")
+        btn_p_local = QPushButton("+ BROWSE LOCAL")
+        btn_p_local.setStyleSheet(
+            f"QPushButton {{ background-color: {THEME.BG_INPUT}; color: {THEME.TEXT_PRIMARY}; "
+            f"font-size: 10px; font-weight: 700; border: 1px solid {THEME.BORDER_COLOR}; "
+            f"border-radius: {THEME.BORDER_RADIUS_SM}; padding: 3px 8px; }} "
+            f"QPushButton:hover {{ background-color: {THEME.BORDER_LIGHT}; border-color: {THEME.PRIMARY_COLOR}; }}"
+        )
         btn_p_local.clicked.connect(self._on_browse_pro_local)
-        h_p_btns.addWidget(btn_p_local)
+        h_p_hdr.addWidget(btn_p_local)
+        v_pro.addLayout(h_p_hdr)
 
         self.combo_pro_vault = QComboBox()
-        self.combo_pro_vault.addItem("-- Choose Reference from Vault --", "")
+        self.combo_pro_vault.setMinimumHeight(30)
+        self.combo_pro_vault.addItem("-- Select Reference Benchmark --", "")
         self.combo_pro_vault.currentIndexChanged.connect(self._on_pro_vault_selected)
-        h_p_btns.addWidget(self.combo_pro_vault)
-        v_pro.addLayout(h_p_btns)
+        v_pro.addWidget(self.combo_pro_vault)
 
-        self.lbl_pro_loaded = QLabel("No reference video loaded")
-        self.lbl_pro_loaded.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px;")
+        self.lbl_pro_loaded = QLabel("No reference selected")
+        self.lbl_pro_loaded.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 10px;")
         v_pro.addWidget(self.lbl_pro_loaded)
-        lf_layout.addLayout(v_pro, stretch=5)
+        deck_layout.addLayout(v_pro, stretch=5)
 
-        main_layout.addWidget(loaders_frame)
+        main_layout.addWidget(selection_deck)
 
-        # 3. Main Center Area (Viewport on Left | Variance Dashboard on Right)
+        # 3. Main Horizontal Center Area (Left Viewport & Controls | Right Telemetry)
         center_widget = QWidget()
         center_layout = QHBoxLayout(center_widget)
         center_layout.setContentsMargins(0, 0, 0, 0)
         center_layout.setSpacing(14)
 
-        # Left: Viewport + Controls
+        # Left Column: Mode Segmented Switcher + Viewport + Scrubber
         v_vp = QVBoxLayout()
         v_vp.setContentsMargins(0, 0, 0, 0)
-        v_vp.setSpacing(10)
+        v_vp.setSpacing(8)
 
-        # Viewport
+        # 3A. Viewport Mode Switcher (Clean Segmented Buttons)
+        h_modes = QHBoxLayout()
+        h_modes.setSpacing(8)
+        lbl_vmode = QLabel("VIEW:")
+        lbl_vmode.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;")
+        h_modes.addWidget(lbl_vmode)
+
+        self.btn_mode_geom = QPushButton("SIDE-BY-SIDE GEOMETRIES (CLEAN)")
+        self.btn_mode_overlay = QPushButton("GHOST OVERLAY (SHOULDER ANCHORED)")
+        self.btn_mode_split = QPushButton("SPLIT VIDEO FEEDS")
+
+        for b in [self.btn_mode_geom, self.btn_mode_overlay, self.btn_mode_split]:
+            b.setCheckable(True)
+            b.setAutoExclusive(True)
+            b.setFixedHeight(30)
+
+        self.btn_mode_geom.setChecked(True)
+        self.btn_mode_geom.clicked.connect(lambda: self._set_display_mode("geom"))
+        self.btn_mode_overlay.clicked.connect(lambda: self._set_display_mode("overlay"))
+        self.btn_mode_split.clicked.connect(lambda: self._set_display_mode("split"))
+
+        self._update_mode_button_styles()
+
+        h_modes.addWidget(self.btn_mode_geom)
+        h_modes.addWidget(self.btn_mode_overlay)
+        h_modes.addWidget(self.btn_mode_split)
+        h_modes.addStretch()
+        v_vp.addLayout(h_modes)
+
+        # 3B. Viewport
         self.viewport = ComparisonViewport(self)
         v_vp.addWidget(self.viewport, stretch=1)
 
-        # Scrubber & Transport Box
+        # 3C. Scrubber & Transport Box (Phase-Normalized Timing Fix)
         trans_frame = QFrame()
         trans_frame.setStyleSheet(
             f"background-color: {THEME.BG_SURFACE}; border: 1px solid {THEME.BORDER_COLOR}; "
             f"border-radius: {THEME.BORDER_RADIUS}; padding: 8px 12px;"
         )
         tf_layout = QVBoxLayout(trans_frame)
-        tf_layout.setSpacing(8)
+        tf_layout.setSpacing(6)
 
-        # Top row: Mode selector + Play controls
-        h_top_ctrl = QHBoxLayout()
-
-        lbl_mode = QLabel("DISPLAY:")
-        lbl_mode.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-weight: 700; font-size: 11px;")
-        h_top_ctrl.addWidget(lbl_mode)
-
-        self.radio_overlay = QRadioButton("Direct Skeletal Overlay")
-        self.radio_overlay.setChecked(True)
-        self.radio_overlay.toggled.connect(self._on_mode_toggled)
-        h_top_ctrl.addWidget(self.radio_overlay)
-
-        self.radio_split = QRadioButton("Side-by-Side Sync")
-        self.radio_split.toggled.connect(self._on_mode_toggled)
-        h_top_ctrl.addWidget(self.radio_split)
-
-        h_top_ctrl.addStretch()
+        # Top row: Transport buttons + Sync mode + Offset
+        h_trans_top = QHBoxLayout()
+        h_trans_top.setSpacing(8)
 
         self.btn_play = QPushButton("PLAY")
-        self.btn_play.setFixedWidth(70)
+        self.btn_play.setFixedWidth(68)
         self.btn_play.clicked.connect(self._toggle_play)
-        h_top_ctrl.addWidget(self.btn_play)
+        h_trans_top.addWidget(self.btn_play)
 
         btn_step_b = QPushButton("<<")
-        btn_step_b.setFixedWidth(36)
+        btn_step_b.setFixedWidth(34)
+        btn_step_b.setToolTip("Step backward")
         btn_step_b.clicked.connect(lambda: self._step_frame(-1))
-        h_top_ctrl.addWidget(btn_step_b)
+        h_trans_top.addWidget(btn_step_b)
 
         btn_step_f = QPushButton(">>")
-        btn_step_f.setFixedWidth(36)
+        btn_step_f.setFixedWidth(34)
+        btn_step_f.setToolTip("Step forward")
         btn_step_f.clicked.connect(lambda: self._step_frame(1))
-        h_top_ctrl.addWidget(btn_step_f)
+        h_trans_top.addWidget(btn_step_f)
 
-        # Sync offset
+        self.chk_loop = QCheckBox("Loop Motion")
+        self.chk_loop.setChecked(True)
+        self.chk_loop.setStyleSheet(f"color: {THEME.TEXT_SECONDARY}; font-size: 11px;")
+        h_trans_top.addWidget(self.chk_loop)
+
+        self.chk_phase_sync = QCheckBox("Phase Sync (Proportional)")
+        self.chk_phase_sync.setChecked(True)
+        self.chk_phase_sync.setToolTip("When enabled, scales both motions from 0% to 100% so peak impact/apex matches perfectly regardless of clip length.")
+        self.chk_phase_sync.setStyleSheet(f"color: {THEME.COLOR_SUCCESS_BRIGHT}; font-size: 11px; font-weight: 600;")
+        self.chk_phase_sync.toggled.connect(self._render_current_frame)
+        h_trans_top.addWidget(self.chk_phase_sync)
+
+        h_trans_top.addStretch()
+
         lbl_offset = QLabel("Sync Offset:")
-        lbl_offset.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-weight: 700; margin-left: 8px;")
-        h_top_ctrl.addWidget(lbl_offset)
+        lbl_offset.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-weight: 700;")
+        h_trans_top.addWidget(lbl_offset)
+
         self.spin_offset = QSpinBox()
-        self.spin_offset.setRange(-120, 120)
+        self.spin_offset.setRange(-30, 30)
         self.spin_offset.setValue(0)
+        self.spin_offset.setSuffix("%")
+        self.spin_offset.setToolTip("Adjust phase offset if user movement starts earlier or later")
         self.spin_offset.valueChanged.connect(self._render_current_frame)
-        h_top_ctrl.addWidget(self.spin_offset)
+        h_trans_top.addWidget(self.spin_offset)
 
-        tf_layout.addLayout(h_top_ctrl)
+        btn_reset_sync = QPushButton("RESET")
+        btn_reset_sync.setStyleSheet(
+            f"QPushButton {{ background-color: {THEME.BG_INPUT}; color: {THEME.TEXT_SECONDARY}; "
+            f"font-size: 10px; font-weight: 700; border: 1px solid {THEME.BORDER_COLOR}; "
+            f"border-radius: {THEME.BORDER_RADIUS_SM}; padding: 3px 8px; }} "
+            f"QPushButton:hover {{ background-color: {THEME.BORDER_LIGHT}; color: {THEME.TEXT_PRIMARY}; }}"
+        )
+        btn_reset_sync.clicked.connect(lambda: self.spin_offset.setValue(0))
+        h_trans_top.addWidget(btn_reset_sync)
 
-        # Bottom row: Slider + Frame index readout
+        tf_layout.addLayout(h_trans_top)
+
+        # Bottom row: Phase Slider & Progress Readout
         h_slider = QHBoxLayout()
         self.slider = QSlider(Qt.Horizontal)
+        self.slider.setRange(0, 1000)
+        self.slider.setValue(0)
         self.slider.sliderMoved.connect(self._on_slider_moved)
         h_slider.addWidget(self.slider, stretch=1)
 
-        self.lbl_frame_idx = QLabel("Frame 0 / 0")
+        self.lbl_frame_idx = QLabel("PHASE: 0%  |  User: --  |  Ref: --")
         self.lbl_frame_idx.setStyleSheet(
-            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 12px; font-weight: 700;"
+            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 700;"
         )
         h_slider.addWidget(self.lbl_frame_idx)
         tf_layout.addLayout(h_slider)
@@ -531,25 +597,25 @@ class ComparisonScreen(QWidget):
         v_vp.addWidget(trans_frame)
         center_layout.addLayout(v_vp, stretch=1)
 
-        # Right: Telemetry & Variance Dashboard
+        # Right Column: Telemetry & Variance Dashboard
         telemetry_widget = QWidget()
         telem_layout = QVBoxLayout(telemetry_widget)
-        telem_layout.setContentsMargins(4, 0, 4, 0)
-        telem_layout.setSpacing(10)
+        telem_layout.setContentsMargins(2, 0, 2, 0)
+        telem_layout.setSpacing(8)
 
-        # Overall Match Header
+        # Overall Form Match Score Box
         score_box = QFrame()
         score_box.setStyleSheet(
             f"background-color: {THEME.BG_SURFACE}; border: 1px solid {THEME.PRIMARY_COLOR}; "
-            f"border-radius: {THEME.BORDER_RADIUS}; padding: 12px;"
+            f"border-radius: {THEME.BORDER_RADIUS}; padding: 10px;"
         )
         sb_layout = QVBoxLayout(score_box)
-        sb_layout.setSpacing(4)
+        sb_layout.setSpacing(2)
         sb_layout.setAlignment(Qt.AlignCenter)
 
         lbl_match_title = QLabel("OVERALL FORM MATCH")
         lbl_match_title.setStyleSheet(
-            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 1.2px;"
+            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; letter-spacing: 1px;"
         )
         sb_layout.addWidget(lbl_match_title)
 
@@ -576,7 +642,7 @@ class ComparisonScreen(QWidget):
         self.card_legs = SegmentVarianceCard("Knee Flexion & Stance Width", THEME.COLOR_DANGER_BRIGHT)
         telem_layout.addWidget(self.card_legs)
 
-        # Coaching Cues Box
+        # Coaching Cue Box
         cue_box = QFrame()
         cue_box.setStyleSheet(
             f"background-color: {THEME.BG_SURFACE}; border: 1px solid {THEME.BORDER_COLOR}; "
@@ -590,17 +656,17 @@ class ComparisonScreen(QWidget):
         )
         cb_layout.addWidget(lbl_cue_h)
 
-        self.lbl_coaching_cue = QLabel("Load user and pro videos to inspect movement variances.")
+        self.lbl_coaching_cue = QLabel("Select user and reference videos to inspect kinematic alignment.")
         self.lbl_coaching_cue.setWordWrap(True)
         self.lbl_coaching_cue.setStyleSheet(
-            f"color: {THEME.TEXT_PRIMARY}; font-size: 12px; font-weight: 600; line-height: 1.3;"
+            f"color: {THEME.TEXT_PRIMARY}; font-size: 11px; font-weight: 600; line-height: 1.3;"
         )
         cb_layout.addWidget(self.lbl_coaching_cue)
         telem_layout.addWidget(cue_box)
 
         telem_scroll = QScrollArea()
         telem_scroll.setWidgetResizable(True)
-        telem_scroll.setFixedWidth(380)
+        telem_scroll.setFixedWidth(360)
         telem_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         telem_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
         telem_scroll.setWidget(telemetry_widget)
@@ -609,24 +675,53 @@ class ComparisonScreen(QWidget):
 
         self._populate_vault_dropdowns()
 
+    def _set_display_mode(self, mode: str) -> None:
+        self._display_mode = mode
+        self.viewport.set_display_mode(mode)
+        self._update_mode_button_styles()
+        self._render_current_frame()
+
+    def _update_mode_button_styles(self) -> None:
+        active_style = (
+            f"QPushButton {{ background-color: {THEME.PRIMARY_COLOR}; color: #09090b; "
+            f"font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 800; "
+            f"border-radius: {THEME.BORDER_RADIUS_SM}; padding: 5px 12px; border: none; }}"
+        )
+        inactive_style = (
+            f"QPushButton {{ background-color: {THEME.BG_INPUT}; color: {THEME.TEXT_SECONDARY}; "
+            f"font-family: {THEME.FONT_FAMILY_TECH}; font-size: 11px; font-weight: 700; "
+            f"border: 1px solid {THEME.BORDER_COLOR}; border-radius: {THEME.BORDER_RADIUS_SM}; padding: 5px 12px; }} "
+            f"QPushButton:hover {{ background-color: {THEME.BORDER_LIGHT}; color: {THEME.TEXT_PRIMARY}; }}"
+        )
+        self.btn_mode_geom.setStyleSheet(active_style if self._display_mode == "geom" else inactive_style)
+        self.btn_mode_overlay.setStyleSheet(active_style if self._display_mode == "overlay" else inactive_style)
+        self.btn_mode_split.setStyleSheet(active_style if self._display_mode == "split" else inactive_style)
+
     def _populate_vault_dropdowns(self) -> None:
-        """Populates vault dropdowns for User and Pro selections."""
-        # User dropdown
+        """Populates vault dropdowns for User and Pro selections separately."""
+        # 1. User dropdown: prioritizes personal user uploads
         self.combo_user_vault.blockSignals(True)
         self.combo_user_vault.clear()
-        self.combo_user_vault.addItem("-- Choose from Vault --", "")
-        user_vids = video_service.get_library(category=None, user_id=self._user.get("id"))
+        self.combo_user_vault.addItem("-- Select Your Video --", "")
+        user_vids = video_service.get_library(category="personal", user_id=self._user.get("id"))
+        if not user_vids:
+            # Fallback to any videos uploaded in personal category or all user-associated videos
+            user_vids = video_service.get_library(category=None, user_id=self._user.get("id"))
+
         for v in user_vids:
-            cat = "USER" if v.get("category") == "personal" else "PRO"
+            cat = "USER" if v.get("category") == "personal" else "VAULT"
             self.combo_user_vault.addItem(f"[{cat}] {v.get('title')} ({v.get('sport')})", v.get("file_path"))
         self.combo_user_vault.blockSignals(False)
 
-        # Reference comparison dropdown (lists all vault videos freely)
+        # 2. Reference pro dropdown: pro athlete reference library
         self.combo_pro_vault.blockSignals(True)
         self.combo_pro_vault.clear()
-        self.combo_pro_vault.addItem("-- Choose Reference from Vault --", "")
-        all_vids = video_service.get_library(category=None, user_id=self._user.get("id"))
-        for v in all_vids:
+        self.combo_pro_vault.addItem("-- Select Reference Benchmark --", "")
+        pro_vids = video_service.get_library(category="pro")
+        if not pro_vids:
+            pro_vids = video_service.get_library(category=None)
+
+        for v in pro_vids:
             self.combo_pro_vault.addItem(f"{v.get('title')} ({v.get('sport')})", v.get("file_path"))
         self.combo_pro_vault.blockSignals(False)
 
@@ -651,11 +746,11 @@ class ComparisonScreen(QWidget):
             self.load_pro_video(p)
 
     def _on_find_closest_pro(self) -> None:
-        """Runs appendage angle variance vector cosine similarity & dynamic waveform congruence to recommend the closest pro athlete."""
+        """Runs appendage angle variance vector cosine similarity & waveform alignment to find closest pro athlete."""
         if not self._user_path or not Path(self._user_path).exists():
             reply = QMessageBox.question(
                 self,
-                "Select User Movement Video",
+                "Select User Video",
                 "No personal movement video loaded yet.\nWould you like to select a video to compare?",
                 QMessageBox.Yes | QMessageBox.No,
             )
@@ -692,16 +787,6 @@ class ComparisonScreen(QWidget):
         dialog = ProRecommendationDialog(report, on_load_pro=self.load_pro_video, parent=self)
         dialog.exec()
 
-    def _update_timeline_bounds(self) -> None:
-        self._max_frames = max(self._user_total_frames, self._pro_total_frames)
-        self.slider.setRange(0, max(0, self._max_frames - 1))
-        self.slider.setValue(0)
-
-    def _on_mode_toggled(self) -> None:
-        mode = "overlay" if self.radio_overlay.isChecked() else "split"
-        self.viewport.set_display_mode(mode)
-        self._render_current_frame()
-
     def _toggle_play(self) -> None:
         self._is_playing = not self._is_playing
         self.btn_play.setText("PAUSE" if self._is_playing else "PLAY")
@@ -712,15 +797,24 @@ class ComparisonScreen(QWidget):
 
     def _on_play_step(self) -> None:
         curr = self.slider.value()
-        next_f = curr + 1
-        if next_f >= self._max_frames:
-            next_f = 0
-        self.slider.setValue(next_f)
+        eff_f = max(self._user_total_frames, self._pro_total_frames, 40)
+        step = max(3, int(1000 / eff_f))
+        next_val = curr + step
+        if next_val >= 1000:
+            if self.chk_loop.isChecked():
+                next_val = 0
+            else:
+                next_val = 1000
+                self._toggle_play()
+                return
+        self.slider.setValue(next_val)
         self._render_current_frame()
 
-    def _step_frame(self, step: int) -> None:
+    def _step_frame(self, step_dir: int) -> None:
+        eff_f = max(self._user_total_frames, self._pro_total_frames, 40)
+        step = max(3, int(1000 / eff_f)) * step_dir
         curr = self.slider.value()
-        clamped = max(0, min(self._max_frames - 1, curr + step))
+        clamped = max(0, min(1000, curr + step))
         self.slider.setValue(clamped)
         self._render_current_frame()
 
@@ -728,36 +822,69 @@ class ComparisonScreen(QWidget):
         self._render_current_frame()
 
     def _render_current_frame(self) -> None:
-        idx = self.slider.value()
-        self.lbl_frame_idx.setText(f"Frame {idx} / {self._max_frames}")
+        val = self.slider.value()
+        phase_pct = val / 1000.0  # Normalized progress 0.0 to 1.0
 
-        offset = self.spin_offset.value()
-        user_idx = max(0, idx + offset)
-        pro_idx = idx
+        is_phase_sync = self.chk_phase_sync.isChecked()
+        offset_val = self.spin_offset.value()
 
+        if is_phase_sync:
+            # Phase-normalized calculation: both videos reach 50% apex together
+            p_offset = offset_val / 100.0
+            u_phase = max(0.0, min(1.0, phase_pct + p_offset))
+            p_phase = phase_pct
+
+            user_idx = int(round(u_phase * (self._user_total_frames - 1))) if self._user_total_frames > 0 else 0
+            pro_idx = int(round(p_phase * (self._pro_total_frames - 1))) if self._pro_total_frames > 0 else 0
+        else:
+            # Raw frame calculation
+            max_f = max(1, max(self._user_total_frames, self._pro_total_frames))
+            base_f = int(round(phase_pct * (max_f - 1)))
+            user_idx = max(0, min(self._user_total_frames - 1, base_f + offset_val)) if self._user_total_frames > 0 else 0
+            pro_idx = max(0, min(self._pro_total_frames - 1, base_f)) if self._pro_total_frames > 0 else 0
+
+        # Clamp indices so neither video ever ends early or goes out of bounds
+        if self._user_total_frames > 0:
+            user_idx = max(0, min(self._user_total_frames - 1, user_idx))
+        if self._pro_total_frames > 0:
+            pro_idx = max(0, min(self._pro_total_frames - 1, pro_idx))
+
+        # Update telemetry readout
+        u_str = f"F{user_idx+1}/{self._user_total_frames}" if self._user_total_frames > 0 else "--"
+        p_str = f"F{pro_idx+1}/{self._pro_total_frames}" if self._pro_total_frames > 0 else "--"
+        self.lbl_frame_idx.setText(f"PHASE: {int(phase_pct * 100)}%  |  User: {u_str}  |  Ref: {p_str}")
+
+        # Fetch frames safely with hold buffering to avoid black screens
         user_frame = None
         pro_frame = None
 
         if self._user_cap and self._user_cap.isOpened():
             self._user_cap.set(cv2.CAP_PROP_POS_FRAMES, user_idx)
             s_u, f_u = self._user_cap.read()
-            if s_u:
+            if s_u and f_u is not None:
+                self._last_user_frame = f_u
                 user_frame = f_u
+            elif self._last_user_frame is not None:
+                user_frame = self._last_user_frame
 
         if self._pro_cap and self._pro_cap.isOpened():
             self._pro_cap.set(cv2.CAP_PROP_POS_FRAMES, pro_idx)
             s_p, f_p = self._pro_cap.read()
-            if s_p:
+            if s_p and f_p is not None:
+                self._last_pro_frame = f_p
                 pro_frame = f_p
+            elif self._last_pro_frame is not None:
+                pro_frame = self._last_pro_frame
 
         # Retrieve pre-computed skeletal geometry saved on video (no real-time model inference lag)
         user_lm = None
         user_angles = {}
         if self._user_geometry and "frames" in self._user_geometry:
             uf = self._user_geometry["frames"]
-            if 0 <= user_idx < len(uf):
-                user_lm = uf[user_idx].get("landmarks")
-                user_angles = uf[user_idx].get("angles", {})
+            if uf:
+                clamped_u = max(0, min(len(uf) - 1, user_idx))
+                user_lm = uf[clamped_u].get("landmarks")
+                user_angles = uf[clamped_u].get("angles", {})
         elif user_frame is not None:
             user_lm = comparison_engine.extract_landmarks(user_frame)
             user_angles = comparison_engine.calculate_angles(user_lm) if user_lm else {}
@@ -766,9 +893,10 @@ class ComparisonScreen(QWidget):
         pro_angles = {}
         if self._pro_geometry and "frames" in self._pro_geometry:
             pf = self._pro_geometry["frames"]
-            if 0 <= pro_idx < len(pf):
-                pro_lm = pf[pro_idx].get("landmarks")
-                pro_angles = pf[pro_idx].get("angles", {})
+            if pf:
+                clamped_p = max(0, min(len(pf) - 1, pro_idx))
+                pro_lm = pf[clamped_p].get("landmarks")
+                pro_angles = pf[clamped_p].get("angles", {})
         elif pro_frame is not None:
             pro_lm = comparison_engine.extract_landmarks(pro_frame)
             pro_angles = comparison_engine.calculate_angles(pro_lm) if pro_lm else {}
@@ -788,25 +916,42 @@ class ComparisonScreen(QWidget):
         # Update 4 Segment Cards
         self.card_arms.update_metrics(
             metrics.arms.variance, metrics.arms.mean_delta_deg, metrics.arms.match_percentage,
-            f"L Elbow: {metrics.arms.joint_details.get('left_elbow', {}).get('delta', 0)}° | R Elbow: {metrics.arms.joint_details.get('right_elbow', {}).get('delta', 0)}°"
+            f"L Elbow: {metrics.arms.joint_details.get('left_elbow', {}).get('delta', 0)} deg | R Elbow: {metrics.arms.joint_details.get('right_elbow', {}).get('delta', 0)} deg"
         )
         self.card_shoulders.update_metrics(
             metrics.shoulders.variance, metrics.shoulders.mean_delta_deg, metrics.shoulders.match_percentage,
-            f"Shoulder Tilt: {metrics.shoulders.joint_details.get('shoulder_tilt', {}).get('user', 0)}° vs {metrics.shoulders.joint_details.get('shoulder_tilt', {}).get('pro', 0)}°"
+            f"Shoulder Tilt: {metrics.shoulders.joint_details.get('shoulder_tilt', {}).get('user', 0)} deg vs {metrics.shoulders.joint_details.get('shoulder_tilt', {}).get('pro', 0)} deg"
         )
         self.card_hips.update_metrics(
             metrics.hips.variance, metrics.hips.mean_delta_deg, metrics.hips.match_percentage,
-            f"Hip Flexion Delta: {metrics.hips.joint_details.get('left_hip', {}).get('delta', 0)}° | Trunk: {metrics.hips.joint_details.get('trunk_lean', {}).get('user', 0)}°"
+            f"Hip Flexion Delta: {metrics.hips.joint_details.get('left_hip', {}).get('delta', 0)} deg | Trunk: {metrics.hips.joint_details.get('trunk_lean', {}).get('user', 0)} deg"
         )
         self.card_legs.update_metrics(
             metrics.legs.variance, metrics.legs.mean_delta_deg, metrics.legs.match_percentage,
-            f"L Knee: {metrics.legs.joint_details.get('left_knee', {}).get('delta', 0)}° | R Knee: {metrics.legs.joint_details.get('right_knee', {}).get('delta', 0)}°"
+            f"L Knee: {metrics.legs.joint_details.get('left_knee', {}).get('delta', 0)} deg | R Knee: {metrics.legs.joint_details.get('right_knee', {}).get('delta', 0)} deg"
         )
 
         self.lbl_coaching_cue.setText(metrics.primary_coaching_cue)
 
-        # Render Viewport (Direct overlay anchored Right Shoulder to Right Shoulder)
-        if self.radio_overlay.isChecked():
+        # Render Viewport based on chosen Mode
+        if self._display_mode == "geom":
+            # 1. Clean Side-by-Side Geometries (Default: dedicated dual stage, zero video collision)
+            geom_canvas = comparison_engine.render_geometric_side_by_side(
+                user_landmarks=user_lm,
+                pro_landmarks=pro_lm,
+                user_angles=user_angles,
+                pro_angles=pro_angles,
+                metrics=metrics,
+                width=1280,
+                height=720,
+                user_label="YOUR ATHLETIC GEOMETRY",
+                pro_label="REFERENCE BENCHMARK",
+                phase_pct=phase_pct,
+            )
+            self.viewport.set_overlay_frame(geom_canvas)
+
+        elif self._display_mode == "overlay":
+            # 2. Direct Camera Overlay anchored Right Shoulder to Right Shoulder
             base = pro_frame if pro_frame is not None else user_frame
             if base is not None:
                 overlay_canvas = comparison_engine.render_direct_overlay(
@@ -815,8 +960,12 @@ class ComparisonScreen(QWidget):
                     user_label="YOUR ATHLETIC FORM"
                 )
                 self.viewport.set_overlay_frame(overlay_canvas)
-        else:
-            # Draw individual skeletons for split view
+            else:
+                placeholder = np.full((720, 1280, 3), (18, 14, 13), dtype=np.uint8)
+                self.viewport.set_overlay_frame(placeholder)
+
+        elif self._display_mode == "split":
+            # 3. Side-by-Side Synchronized Video Feeds
             u_disp = user_frame.copy() if user_frame is not None else None
             p_disp = pro_frame.copy() if pro_frame is not None else None
             if u_disp is not None and user_lm:
@@ -825,12 +974,12 @@ class ComparisonScreen(QWidget):
                     lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
                     ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
                     pts_u[idx] = (int(lx * u_disp.shape[1]), int(ly * u_disp.shape[0]))
-                comparison_engine._draw_skeleton_lines(u_disp, pts_u, (94, 63, 244), 2)
+                comparison_engine._draw_skeleton_lines(u_disp, pts_u, (94, 63, 244), 3)
             if p_disp is not None and pro_lm:
                 pts_p = {}
                 for idx, lm in enumerate(pro_lm):
                     lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
                     ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
                     pts_p[idx] = (int(lx * p_disp.shape[1]), int(ly * p_disp.shape[0]))
-                comparison_engine._draw_skeleton_lines(p_disp, pts_p, (255, 240, 0), 2)
+                comparison_engine._draw_skeleton_lines(p_disp, pts_p, (255, 240, 0), 3)
             self.viewport.set_split_frames(u_disp, p_disp)
