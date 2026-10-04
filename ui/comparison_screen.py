@@ -106,11 +106,6 @@ class ComparisonViewport(QWidget):
                 ux = left_rect.x() + (left_rect.width() - scaled_u.width()) // 2
                 uy = left_rect.y() + (left_rect.height() - scaled_u.height()) // 2
                 painter.drawPixmap(ux, uy, scaled_u)
-
-                # Label User
-                painter.setPen(QColor(THEME.COLOR_DANGER_BRIGHT))
-                painter.setFont(QFont("Orbitron", 10, QFont.Bold))
-                painter.drawText(ux + 12, uy + 24, "YOUR FORM (USER)")
             else:
                 painter.fillRect(left_rect, QColor(THEME.BG_SURFACE))
                 painter.setPen(QColor(THEME.TEXT_MUTED))
@@ -122,11 +117,6 @@ class ComparisonViewport(QWidget):
                 px = right_rect.x() + (right_rect.width() - scaled_p.width()) // 2
                 py = right_rect.y() + (right_rect.height() - scaled_p.height()) // 2
                 painter.drawPixmap(px, py, scaled_p)
-
-                # Label Reference Benchmark
-                painter.setPen(QColor(THEME.PRIMARY_COLOR))
-                painter.setFont(QFont("Orbitron", 10, QFont.Bold))
-                painter.drawText(px + 12, py + 24, "REFERENCE BENCHMARK")
             else:
                 painter.fillRect(right_rect, QColor(THEME.BG_SURFACE))
                 painter.setPen(QColor(THEME.TEXT_MUTED))
@@ -143,7 +133,7 @@ class ComparisonViewport(QWidget):
 
     def _draw_placeholder(self, painter: QPainter, text: str) -> None:
         painter.setPen(QColor(THEME.TEXT_MUTED))
-        painter.setFont(QFont("Orbitron", 11, QFont.Bold))
+        painter.setFont(QFont("Segoe UI", 11, QFont.Bold))
         painter.drawText(self.rect(), Qt.AlignCenter, text)
 
 
@@ -247,6 +237,8 @@ class ComparisonScreen(QWidget):
 
         self._display_mode: str = "geom"  # "geom" (default), "overlay", or "split"
         self._is_playing: bool = False
+        self._mirror_user: bool = False
+        self._mirror_pro: bool = False
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._on_play_step)
@@ -350,6 +342,25 @@ class ComparisonScreen(QWidget):
         )
         btn_u_local.clicked.connect(self._on_browse_user_local)
         h_u_hdr.addWidget(btn_u_local)
+
+        btn_u_target = QPushButton("CHOOSE ATHLETE")
+        btn_u_target.setToolTip("Click on which person to track in this video")
+        btn_u_target.setStyleSheet(
+            f"QPushButton {{ background-color: {THEME.BG_INPUT}; color: {THEME.PRIMARY_COLOR}; "
+            f"font-size: 10px; font-weight: 700; border: 1px solid {THEME.PRIMARY_COLOR}; "
+            f"border-radius: {THEME.BORDER_RADIUS_SM}; padding: 3px 8px; }} "
+            f"QPushButton:hover {{ background-color: {THEME.PRIMARY_COLOR}; color: #09090b; }}"
+        )
+        btn_u_target.clicked.connect(self._on_choose_user_athlete)
+        h_u_hdr.addWidget(btn_u_target)
+
+        self.btn_u_mirror = QPushButton("MIRROR")
+        self.btn_u_mirror.setCheckable(True)
+        self.btn_u_mirror.setToolTip("Mirror user video horizontally to match pro facing direction")
+        self.btn_u_mirror.clicked.connect(self._on_toggle_user_mirror)
+        self._update_mirror_btn_style(self.btn_u_mirror, False, THEME.COLOR_DANGER_BRIGHT)
+        h_u_hdr.addWidget(self.btn_u_mirror)
+
         v_user.addLayout(h_u_hdr)
 
         self.combo_user_vault = QComboBox()
@@ -416,6 +427,14 @@ class ComparisonScreen(QWidget):
         )
         btn_p_local.clicked.connect(self._on_browse_pro_local)
         h_p_hdr.addWidget(btn_p_local)
+
+        self.btn_p_mirror = QPushButton("MIRROR")
+        self.btn_p_mirror.setCheckable(True)
+        self.btn_p_mirror.setToolTip("Mirror reference video horizontally to match your facing direction")
+        self.btn_p_mirror.clicked.connect(self._on_toggle_pro_mirror)
+        self._update_mirror_btn_style(self.btn_p_mirror, False, THEME.PRIMARY_COLOR)
+        h_p_hdr.addWidget(self.btn_p_mirror)
+
         v_pro.addLayout(h_p_hdr)
 
         self.combo_pro_vault = QComboBox()
@@ -516,6 +535,18 @@ class ComparisonScreen(QWidget):
         self.chk_phase_sync.setStyleSheet(f"color: {THEME.COLOR_SUCCESS_BRIGHT}; font-size: 11px; font-weight: 600;")
         self.chk_phase_sync.toggled.connect(self._render_current_frame)
         h_trans_top.addWidget(self.chk_phase_sync)
+
+        self.chk_mirror_user = QCheckBox("Mirror User")
+        self.chk_mirror_user.setToolTip("Mirror user video horizontally")
+        self.chk_mirror_user.setStyleSheet(f"color: {THEME.COLOR_DANGER_BRIGHT}; font-size: 11px; font-weight: 600;")
+        self.chk_mirror_user.toggled.connect(self._on_chk_user_mirror_toggled)
+        h_trans_top.addWidget(self.chk_mirror_user)
+
+        self.chk_mirror_pro = QCheckBox("Mirror Pro")
+        self.chk_mirror_pro.setToolTip("Mirror reference pro video horizontally")
+        self.chk_mirror_pro.setStyleSheet(f"color: {THEME.PRIMARY_COLOR}; font-size: 11px; font-weight: 600;")
+        self.chk_mirror_pro.toggled.connect(self._on_chk_pro_mirror_toggled)
+        h_trans_top.addWidget(self.chk_mirror_pro)
 
         h_trans_top.addStretch()
 
@@ -748,6 +779,57 @@ class ComparisonScreen(QWidget):
         self.btn_mode_overlay.setStyleSheet(active_style if self._display_mode == "overlay" else inactive_style)
         self.btn_mode_split.setStyleSheet(active_style if self._display_mode == "split" else inactive_style)
 
+    def _update_mirror_btn_style(self, btn: QPushButton, is_mirrored: bool, active_color: str) -> None:
+        """Updates styling and label for mirror toggle buttons."""
+        if is_mirrored:
+            btn.setText("MIRRORED")
+            btn.setStyleSheet(
+                f"QPushButton {{ background-color: {active_color}; color: #09090b; "
+                f"font-size: 10px; font-weight: 800; letter-spacing: 0.6px; border: 1px solid {active_color}; "
+                f"border-radius: {THEME.BORDER_RADIUS_SM}; padding: 3px 8px; }} "
+                f"QPushButton:hover {{ opacity: 0.9; }}"
+            )
+        else:
+            btn.setText("MIRROR")
+            btn.setStyleSheet(
+                f"QPushButton {{ background-color: {THEME.BG_INPUT}; color: {THEME.TEXT_SECONDARY}; "
+                f"font-size: 10px; font-weight: 700; border: 1px solid {THEME.BORDER_COLOR}; "
+                f"border-radius: {THEME.BORDER_RADIUS_SM}; padding: 3px 8px; }} "
+                f"QPushButton:hover {{ background-color: {THEME.BORDER_LIGHT}; color: {THEME.TEXT_PRIMARY}; border-color: {active_color}; }}"
+            )
+
+    def _on_toggle_user_mirror(self) -> None:
+        self._mirror_user = self.btn_u_mirror.isChecked()
+        self.chk_mirror_user.blockSignals(True)
+        self.chk_mirror_user.setChecked(self._mirror_user)
+        self.chk_mirror_user.blockSignals(False)
+        self._update_mirror_btn_style(self.btn_u_mirror, self._mirror_user, THEME.COLOR_DANGER_BRIGHT)
+        self._render_current_frame()
+
+    def _on_toggle_pro_mirror(self) -> None:
+        self._mirror_pro = self.btn_p_mirror.isChecked()
+        self.chk_mirror_pro.blockSignals(True)
+        self.chk_mirror_pro.setChecked(self._mirror_pro)
+        self.chk_mirror_pro.blockSignals(False)
+        self._update_mirror_btn_style(self.btn_p_mirror, self._mirror_pro, THEME.PRIMARY_COLOR)
+        self._render_current_frame()
+
+    def _on_chk_user_mirror_toggled(self, checked: bool) -> None:
+        self._mirror_user = checked
+        self.btn_u_mirror.blockSignals(True)
+        self.btn_u_mirror.setChecked(checked)
+        self.btn_u_mirror.blockSignals(False)
+        self._update_mirror_btn_style(self.btn_u_mirror, self._mirror_user, THEME.COLOR_DANGER_BRIGHT)
+        self._render_current_frame()
+
+    def _on_chk_pro_mirror_toggled(self, checked: bool) -> None:
+        self._mirror_pro = checked
+        self.btn_p_mirror.blockSignals(True)
+        self.btn_p_mirror.setChecked(checked)
+        self.btn_p_mirror.blockSignals(False)
+        self._update_mirror_btn_style(self.btn_p_mirror, self._mirror_pro, THEME.PRIMARY_COLOR)
+        self._render_current_frame()
+
     def _populate_vault_dropdowns(self) -> None:
         """Populates vault dropdowns for User and Pro selections separately."""
         # 1. User dropdown: personal user uploads followed by uploaded vault references
@@ -783,6 +865,28 @@ class ComparisonScreen(QWidget):
         p = self.combo_user_vault.currentData()
         if p:
             self.load_user_video(p)
+
+    def _on_choose_user_athlete(self) -> None:
+        if not self._user_path or not Path(self._user_path).exists():
+            QMessageBox.warning(self, "No Video Loaded", "Please select or browse a user video first.")
+            return
+        from ui.person_selector_widget import PersonSelectionDialog
+        dlg = PersonSelectionDialog(self._user_path, parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            bbox, start_frame = dlg.get_selection()
+            if bbox:
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                try:
+                    self._user_geometry = geometry_cache.get_or_compute_geometry(
+                        self._user_path,
+                        initial_bbox=bbox,
+                        start_frame=start_frame,
+                        force_recompute=True,
+                    )
+                    self.lbl_user_loaded.setText(f"Tracked: Athlete (F{start_frame+1}) - {Path(self._user_path).name}")
+                    self._render_current_frame()
+                finally:
+                    QApplication.restoreOverrideCursor()
 
     def _on_browse_pro_local(self) -> None:
         p, _ = QFileDialog.getOpenFileName(self, "Select Pro Athlete Reference", "", "Video Files (*.mp4 *.mov *.avi *.mkv)")
@@ -912,18 +1016,18 @@ class ComparisonScreen(QWidget):
             s_u, f_u = self._user_cap.read()
             if s_u and f_u is not None:
                 self._last_user_frame = f_u
-                user_frame = f_u
+                user_frame = f_u.copy()
             elif self._last_user_frame is not None:
-                user_frame = self._last_user_frame
+                user_frame = self._last_user_frame.copy()
 
         if self._pro_cap and self._pro_cap.isOpened():
             self._pro_cap.set(cv2.CAP_PROP_POS_FRAMES, pro_idx)
             s_p, f_p = self._pro_cap.read()
             if s_p and f_p is not None:
                 self._last_pro_frame = f_p
-                pro_frame = f_p
+                pro_frame = f_p.copy()
             elif self._last_pro_frame is not None:
-                pro_frame = self._last_pro_frame
+                pro_frame = self._last_pro_frame.copy()
 
         # Retrieve pre-computed skeletal geometry saved on video (no real-time model inference lag)
         user_lm = None
@@ -949,6 +1053,24 @@ class ComparisonScreen(QWidget):
         elif pro_frame is not None:
             pro_lm = comparison_engine.extract_landmarks(pro_frame)
             pro_angles = comparison_engine.calculate_angles(pro_lm) if pro_lm else {}
+
+        # Apply horizontal mirroring if enabled
+        if self._mirror_user:
+            if user_frame is not None:
+                user_frame = cv2.flip(user_frame, 1)
+            if user_lm is not None:
+                user_lm = comparison_engine.mirror_landmarks(user_lm)
+
+        if self._mirror_pro:
+            if pro_frame is not None:
+                pro_frame = cv2.flip(pro_frame, 1)
+            if pro_lm is not None:
+                pro_lm = comparison_engine.mirror_landmarks(pro_lm)
+
+        if user_lm and not user_angles:
+            user_angles = comparison_engine.calculate_angles(user_lm)
+        if pro_lm and not pro_angles:
+            pro_angles = comparison_engine.calculate_angles(pro_lm)
 
         # Compute Variances across Arms, Shoulders, Hips, Legs
         metrics = comparison_engine.compute_variances(user_angles, pro_angles)
@@ -982,6 +1104,10 @@ class ComparisonScreen(QWidget):
 
         self.lbl_coaching_cue.setText(metrics.primary_coaching_cue)
 
+        # Dynamic badges indicating mirrored status
+        u_label_text = "YOUR ATHLETIC FORM [MIRRORED]" if self._mirror_user else "YOUR ATHLETIC FORM"
+        p_label_text = "REFERENCE BENCHMARK [MIRRORED]" if self._mirror_pro else "REFERENCE BENCHMARK"
+
         # Render Viewport based on chosen Mode
         if self._display_mode == "geom":
             # 1. Clean Side-by-Side Geometries (Default: dedicated dual stage, zero video collision)
@@ -993,8 +1119,8 @@ class ComparisonScreen(QWidget):
                 metrics=metrics,
                 width=1280,
                 height=720,
-                user_label="YOUR ATHLETIC GEOMETRY",
-                pro_label="REFERENCE BENCHMARK",
+                user_label="YOUR ATHLETIC GEOMETRY [MIRRORED]" if self._mirror_user else "YOUR ATHLETIC GEOMETRY",
+                pro_label="REFERENCE BENCHMARK [MIRRORED]" if self._mirror_pro else "REFERENCE BENCHMARK",
                 phase_pct=phase_pct,
             )
             self.viewport.set_overlay_frame(geom_canvas)
@@ -1005,8 +1131,8 @@ class ComparisonScreen(QWidget):
             if base is not None:
                 overlay_canvas = comparison_engine.render_direct_overlay(
                     base, pro_lm, user_lm, metrics,
-                    pro_label="REFERENCE BENCHMARK",
-                    user_label="YOUR ATHLETIC FORM"
+                    pro_label=p_label_text,
+                    user_label=u_label_text
                 )
                 self.viewport.set_overlay_frame(overlay_canvas)
             else:
@@ -1017,18 +1143,39 @@ class ComparisonScreen(QWidget):
             # 3. Side-by-Side Synchronized Video Feeds
             u_disp = user_frame.copy() if user_frame is not None else None
             p_disp = pro_frame.copy() if pro_frame is not None else None
-            if u_disp is not None and user_lm:
-                pts_u = {}
-                for idx, lm in enumerate(user_lm):
-                    lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
-                    ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
-                    pts_u[idx] = (int(lx * u_disp.shape[1]), int(ly * u_disp.shape[0]))
-                comparison_engine._draw_skeleton_lines(u_disp, pts_u, (94, 63, 244), 3)
-            if p_disp is not None and pro_lm:
-                pts_p = {}
-                for idx, lm in enumerate(pro_lm):
-                    lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
-                    ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
-                    pts_p[idx] = (int(lx * p_disp.shape[1]), int(ly * p_disp.shape[0]))
-                comparison_engine._draw_skeleton_lines(p_disp, pts_p, (255, 240, 0), 3)
+
+            if u_disp is not None:
+                if user_lm:
+                    pts_u = {}
+                    for idx, lm in enumerate(user_lm):
+                        lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
+                        ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
+                        pts_u[idx] = (int(lx * u_disp.shape[1]), int(ly * u_disp.shape[0]))
+                    comparison_engine._draw_skeleton_lines(u_disp, pts_u, (94, 63, 244), 3)
+                    for pt in pts_u.values():
+                        cv2.circle(u_disp, pt, 4, (94, 63, 244), -1, cv2.LINE_AA)
+
+                # Top-left badge on user video
+                badge_w = 260 if "MIRRORED" not in u_label_text else 330
+                cv2.rectangle(u_disp, (16, 16), (16 + badge_w, 48), (9, 9, 11), -1)
+                cv2.rectangle(u_disp, (16, 16), (16 + badge_w, 48), (50, 50, 56), 1)
+                cv2.putText(u_disp, u_label_text, (26, 38), cv2.FONT_HERSHEY_SIMPLEX, 0.44, (94, 63, 244), 1, cv2.LINE_AA)
+
+            if p_disp is not None:
+                if pro_lm:
+                    pts_p = {}
+                    for idx, lm in enumerate(pro_lm):
+                        lx = lm["x"] if isinstance(lm, dict) else getattr(lm, "x", 0.0)
+                        ly = lm["y"] if isinstance(lm, dict) else getattr(lm, "y", 0.0)
+                        pts_p[idx] = (int(lx * p_disp.shape[1]), int(ly * p_disp.shape[0]))
+                    comparison_engine._draw_skeleton_lines(p_disp, pts_p, (255, 240, 0), 3)
+                    for pt in pts_p.values():
+                        cv2.circle(p_disp, pt, 4, (255, 240, 0), -1, cv2.LINE_AA)
+
+                # Top-left badge on pro video
+                badge_w = 260 if "MIRRORED" not in p_label_text else 340
+                cv2.rectangle(p_disp, (16, 16), (16 + badge_w, 48), (9, 9, 11), -1)
+                cv2.rectangle(p_disp, (16, 16), (16 + badge_w, 48), (50, 50, 56), 1)
+                cv2.putText(p_disp, p_label_text, (26, 38), cv2.FONT_HERSHEY_SIMPLEX, 0.44, (255, 240, 0), 1, cv2.LINE_AA)
+
             self.viewport.set_split_frames(u_disp, p_disp)

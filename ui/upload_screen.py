@@ -30,6 +30,7 @@ from services.geometry_cache import geometry_cache
 from services.pro_similarity_service import pro_similarity_service
 from services.theme import THEME
 from services.video_service import video_service
+from ui.person_selector_widget import PersonSelectorWidget
 from ui.pro_recommendation_dialog import ProRecommendationDialog
 
 logger = logging.getLogger(__name__)
@@ -163,34 +164,95 @@ class VideoCard(QFrame):
 
 
 class UploadVideoModal(QDialog):
-    """Modal dialog allowing authenticated users to upload videos to the server."""
+    """Modal dialog allowing authenticated users to upload videos to the server and select target athlete."""
 
     def __init__(self, user_id: int, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.user_id = user_id
-        self.setWindowTitle("Upload Athletic Video to Server")
-        self.resize(500, 480)
+        self.setWindowTitle("Upload Athletic Video // Choose Athlete to Track")
+        self.resize(1080, 700)
+        self.setMinimumSize(960, 620)
         self._selected_path: Optional[str] = None
         self.uploaded_record: Optional[Dict[str, Any]] = None
         self.pro_report: Optional[Any] = None
         self._init_ui()
 
     def _init_ui(self) -> None:
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(14)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(14)
 
-        # Title
+        # Header Title & Subtitle
+        header_layout = QVBoxLayout()
+        header_layout.setSpacing(4)
         lbl_head = QLabel("UPLOAD TO ATHLETIC SERVER VAULT")
         lbl_head.setStyleSheet(
-            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_DISPLAY}; font-size: 16px; font-weight: 800;"
+            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_DISPLAY}; font-size: 16px; font-weight: 800; letter-spacing: 0.8px;"
         )
-        layout.addWidget(lbl_head)
+        header_layout.addWidget(lbl_head)
 
-        # 1. File Selector
-        lbl_f = QLabel("Video File (.mp4, .mov, .avi, .mkv):")
+        lbl_subhead = QLabel(
+            "Select a training clip, click directly on the athlete you want to track on the preview, and upload for kinematic analysis."
+        )
+        lbl_subhead.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 12px; font-weight: 600;")
+        header_layout.addWidget(lbl_subhead)
+        main_layout.addLayout(header_layout)
+
+        # Two-Column Content Layout (Left: Person Selector Canvas & Scrubber; Right: Video Metadata & Target Lock)
+        content_layout = QHBoxLayout()
+        content_layout.setSpacing(16)
+
+        # === LEFT COLUMN: Interactive Athlete Selection Widget ===
+        left_container = QVBoxLayout()
+        left_container.setSpacing(8)
+
+        self.person_selector = PersonSelectorWidget(self)
+        self.person_selector.person_selected.connect(self._on_person_selected)
+        left_container.addWidget(self.person_selector, stretch=1)
+        content_layout.addLayout(left_container, stretch=3)
+
+        # === RIGHT COLUMN: Metadata & Target Lock Card ===
+        right_container = QVBoxLayout()
+        right_container.setSpacing(12)
+
+        # 1. Target Lock Status Card
+        target_card = QFrame()
+        target_card.setObjectName("target_lock_card")
+        target_card.setStyleSheet(
+            f"QFrame#target_lock_card {{ "
+            f"  background-color: {THEME.BG_SURFACE}; "
+            f"  border: 1px solid {THEME.BORDER_COLOR}; "
+            f"  border-radius: {THEME.BORDER_RADIUS}; "
+            f"}}"
+        )
+        target_card_layout = QVBoxLayout(target_card)
+        target_card_layout.setContentsMargins(14, 12, 14, 12)
+        target_card_layout.setSpacing(6)
+
+        lbl_target_hdr = QLabel("TARGET TRACKING LOCK")
+        lbl_target_hdr.setStyleSheet(
+            f"color: {THEME.TEXT_MUTED}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; border: none; background: transparent;"
+        )
+        target_card_layout.addWidget(lbl_target_hdr)
+
+        self.lbl_target_title = QLabel("NO VIDEO LOADED")
+        self.lbl_target_title.setStyleSheet(
+            f"color: {THEME.TEXT_MUTED}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 13px; font-weight: 800; border: none; background: transparent;"
+        )
+        target_card_layout.addWidget(self.lbl_target_title)
+
+        self.lbl_target_coords = QLabel("Load a video and click directly on the athlete to lock tracking.")
+        self.lbl_target_coords.setWordWrap(True)
+        self.lbl_target_coords.setStyleSheet(
+            f"color: {THEME.TEXT_MUTED}; font-size: 11px; line-height: 1.3; border: none; background: transparent;"
+        )
+        target_card_layout.addWidget(self.lbl_target_coords)
+        right_container.addWidget(target_card)
+
+        # 2. File Selection
+        lbl_f = QLabel("Video File (.mp4, .mov, .avi, .mkv, .webm):")
         lbl_f.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-weight: 700;")
-        layout.addWidget(lbl_f)
+        right_container.addWidget(lbl_f)
 
         h_file = QHBoxLayout()
         self.txt_path = QLineEdit()
@@ -199,56 +261,90 @@ class UploadVideoModal(QDialog):
         h_file.addWidget(self.txt_path)
 
         btn_browse = QPushButton("BROWSE...")
+        btn_browse.setStyleSheet(
+            f"QPushButton {{ background-color: {THEME.BG_INPUT}; border: 1px solid {THEME.PRIMARY_COLOR}; "
+            f"color: {THEME.PRIMARY_COLOR}; font-weight: 700; font-size: 11px; padding: 6px 12px; border-radius: {THEME.BORDER_RADIUS_SM}; }} "
+            f"QPushButton:hover {{ background-color: {THEME.PRIMARY_COLOR}; color: #09090b; }}"
+        )
         btn_browse.clicked.connect(self._on_browse)
         h_file.addWidget(btn_browse)
-        layout.addLayout(h_file)
+        right_container.addLayout(h_file)
 
-        # 2. Title Input
+        # 3. Title Input
         lbl_t = QLabel("Video Title:")
         lbl_t.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-weight: 700;")
-        layout.addWidget(lbl_t)
+        right_container.addWidget(lbl_t)
         self.txt_title = QLineEdit()
         self.txt_title.setPlaceholderText("e.g. Volleyball Jump Spike - Lateral Angle")
-        layout.addWidget(self.txt_title)
+        right_container.addWidget(self.txt_title)
 
-        # 3. Sport Selector
+        # 4. Sport Selector
         lbl_s = QLabel("Sport / Drill Discipline:")
         lbl_s.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-weight: 700;")
-        layout.addWidget(lbl_s)
+        right_container.addWidget(lbl_s)
         self.combo_sport = QComboBox()
         self.combo_sport.addItems(["Volleyball", "Baseball", "Squat / Strength", "Track & Field", "General Athletics"])
-        layout.addWidget(self.combo_sport)
+        right_container.addWidget(self.combo_sport)
 
-        # 4. Category (Personal by default)
+        # 5. Archive Category
         lbl_c = QLabel("Archive Category:")
         lbl_c.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-weight: 700;")
-        layout.addWidget(lbl_c)
+        right_container.addWidget(lbl_c)
         self.combo_cat = QComboBox()
         self.combo_cat.addItem("Personal Recording (Default)", "personal")
         self.combo_cat.addItem("Professional Reference (Pro Athlete)", "pro")
         self.combo_cat.addItem("Shared / Both", "both")
-        layout.addWidget(self.combo_cat)
+        right_container.addWidget(self.combo_cat)
 
-        # 5. Description
+        # 6. Description / Technique Notes
         lbl_d = QLabel("Technique Notes (Optional):")
         lbl_d.setStyleSheet(f"color: {THEME.TEXT_MUTED}; font-size: 11px; font-weight: 700;")
-        layout.addWidget(lbl_d)
+        right_container.addWidget(lbl_d)
         self.txt_desc = QTextEdit()
-        self.txt_desc.setMaximumHeight(70)
+        self.txt_desc.setMaximumHeight(65)
         self.txt_desc.setPlaceholderText("Focus on elbow height, arm swing velocity, hip torque...")
-        layout.addWidget(self.txt_desc)
+        right_container.addWidget(self.txt_desc)
 
-        # 6. Action buttons
+        right_container.addStretch()
+
+        # 7. Action buttons
         h_actions = QHBoxLayout()
+        h_actions.setSpacing(8)
+
         btn_cancel = QPushButton("CANCEL")
-        btn_cancel.clicked.connect(self.reject)
+        btn_cancel.clicked.connect(self._on_cancel)
         h_actions.addWidget(btn_cancel)
 
-        self.btn_upload = QPushButton("UPLOAD TO SERVER")
+        self.btn_upload = QPushButton("UPLOAD AND TRACK TARGET")
         self.btn_upload.setObjectName("btn_start")
         self.btn_upload.clicked.connect(self._on_upload)
         h_actions.addWidget(self.btn_upload)
-        layout.addLayout(h_actions)
+        right_container.addLayout(h_actions)
+
+        content_layout.addLayout(right_container, stretch=2)
+        main_layout.addLayout(content_layout)
+
+    def _on_person_selected(self, idx: int, bbox: tuple, frame_idx: int) -> None:
+        bx, by, bw, bh = bbox
+        self.lbl_target_title.setText(f"ATHLETE #{idx + 1} (LOCKED)")
+        self.lbl_target_title.setStyleSheet(
+            f"color: {THEME.PRIMARY_COLOR}; font-family: {THEME.FONT_FAMILY_TECH}; font-size: 13px; font-weight: 800;"
+        )
+        self.lbl_target_coords.setText(
+            f"Anchor Frame: {frame_idx + 1} | Box: {bw}x{bh}px at ({bx}, {by})\n"
+            f"Pose tracking and kinematic analysis will follow this athlete across the entire clip."
+        )
+        self.lbl_target_coords.setStyleSheet(
+            f"color: {THEME.COLOR_SUCCESS_BRIGHT}; font-size: 11px; font-weight: 600;"
+        )
+
+    def _on_cancel(self) -> None:
+        self.person_selector.close()
+        self.reject()
+
+    def closeEvent(self, event) -> None:
+        self.person_selector.close()
+        super().closeEvent(event)
 
     def _on_browse(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
@@ -262,6 +358,9 @@ class UploadVideoModal(QDialog):
             self.txt_path.setText(path)
             if not self.txt_title.text():
                 self.txt_title.setText(Path(path).stem.replace("_", " ").title())
+            loaded = self.person_selector.load_video(path)
+            if not loaded:
+                QMessageBox.warning(self, "Video Load Warning", "Could not load video into athlete selection preview.")
 
     def _on_upload(self) -> None:
         if not self._selected_path:
@@ -272,6 +371,8 @@ class UploadVideoModal(QDialog):
         if not title:
             QMessageBox.warning(self, "Missing Title", "Please enter a title for the video.")
             return
+
+        selected_bbox, start_frame = self.person_selector.get_selection()
 
         cat = self.combo_cat.currentData()
         sport = self.combo_sport.currentText()
@@ -290,14 +391,20 @@ class UploadVideoModal(QDialog):
             dest_file = record.get("file_path") if record else self._selected_path
             self.uploaded_record = record
 
-            # 1. Pre-compute and save geometry to server storage (instant O(1) overlay without real-time model lag)
+            # 1. Pre-compute and save geometry locked onto chosen athlete
             self.btn_upload.setEnabled(False)
-            self.btn_upload.setText("PRE-COMPUTING SKELETAL GEOMETRY...")
+            target_str = f"Athlete #{self.person_selector._selected_idx + 1}" if selected_bbox else "Primary Athlete"
+            self.btn_upload.setText(f"TRACKING {target_str.upper()} & SAVING GEOMETRY...")
             QApplication.processEvents()
             try:
-                geometry_cache.get_or_compute_geometry(dest_file)
+                geometry_cache.get_or_compute_geometry(
+                    dest_file,
+                    initial_bbox=selected_bbox,
+                    start_frame=start_frame,
+                    force_recompute=True,
+                )
             except Exception as e:
-                logger.error(f"Error caching geometry: {e}")
+                logger.error(f"Error caching geometry for tracked athlete: {e}")
 
             # 2. Run AI pro athlete matchmaker to find closest pro form match
             self.btn_upload.setText("AI PRO MATCHMAKING...")
@@ -308,14 +415,16 @@ class UploadVideoModal(QDialog):
                 logger.error(f"Error calculating pro recommendation: {e}")
 
             best_name = self.pro_report.best_match.pro_name if (self.pro_report and self.pro_report.best_match) else None
+            athlete_note = f"Tracked Target: {target_str}\n\n" if selected_bbox else ""
             if best_name:
                 QMessageBox.information(
                     self,
                     "Upload & Biomechanical Analysis Complete",
-                    f"{msg}\n\nAI Matchmaker Result:\nOkay, you look like {best_name}!"
+                    f"{msg}\n\n{athlete_note}AI Matchmaker Result:\nOkay, you look like {best_name}!"
                 )
             else:
-                QMessageBox.information(self, "Upload Success", msg)
+                QMessageBox.information(self, "Upload Success", f"{msg}\n\n{athlete_note}")
+            self.person_selector.close()
             self.accept()
         else:
             QMessageBox.critical(self, "Upload Failed", msg)

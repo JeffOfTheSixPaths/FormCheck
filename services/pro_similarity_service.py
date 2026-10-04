@@ -152,6 +152,73 @@ class ProSimilarityService:
             except Exception as e:
                 logger.warning("Could not read signature cache for %s: %s", video_path, e)
 
+        # Check if pre-computed geometry already exists for this video
+        from services.geometry_cache import geometry_cache
+        if geometry_cache.has_geometry(resolved_path):
+            try:
+                geom = geometry_cache.get_or_compute_geometry(resolved_path)
+                frames = geom.get("frames", [])
+                if frames:
+                    angle_series: Dict[str, List[float]] = {k: [] for k in self.CONNECTED_JOINTS}
+                    for f in frames:
+                        f_angles = f.get("angles", {})
+                        for k in self.CONNECTED_JOINTS:
+                            if k in f_angles:
+                                angle_series[k].append(f_angles[k])
+
+                    total_frames = geom.get("total_frames", len(frames))
+                    fps = geom.get("fps", 30.0)
+                    duration = total_frames / fps if fps > 0 else 0.0
+
+                    joint_variances: Dict[str, float] = {}
+                    joint_means: Dict[str, float] = {}
+                    joint_stds: Dict[str, float] = {}
+                    trajectories: Dict[str, List[float]] = {}
+                    variance_vector: List[float] = []
+
+                    for k in self.CONNECTED_JOINTS:
+                        series = angle_series[k]
+                        if len(series) > 0:
+                            arr = np.array(series, dtype=np.float32)
+                            var_val = float(np.var(arr))
+                            mean_val = float(np.mean(arr))
+                            std_val = float(np.std(arr))
+                            if len(series) > 1:
+                                x_old = np.linspace(0, 1, len(series))
+                                x_new = np.linspace(0, 1, 100)
+                                norm_traj = np.interp(x_new, x_old, arr).tolist()
+                            else:
+                                norm_traj = [mean_val] * 100
+                        else:
+                            var_val = 0.0
+                            mean_val = 0.0
+                            std_val = 0.0
+                            norm_traj = [0.0] * 100
+
+                        joint_variances[k] = round(var_val, 3)
+                        joint_means[k] = round(mean_val, 2)
+                        joint_stds[k] = round(std_val, 2)
+                        trajectories[k] = [round(x, 2) for x in norm_traj]
+                        variance_vector.append(round(var_val, 3))
+
+                    sig = KinematicSignature(
+                        video_path=resolved_path,
+                        sport=sport,
+                        total_frames=total_frames,
+                        duration_seconds=round(duration, 2),
+                        fps=round(fps, 1),
+                        joint_variances=joint_variances,
+                        joint_means=joint_means,
+                        joint_stds=joint_stds,
+                        trajectories=trajectories,
+                        variance_vector=variance_vector,
+                        joint_keys=list(self.CONNECTED_JOINTS),
+                    )
+                    self._memory_cache[resolved_path] = sig
+                    return sig
+            except Exception as e:
+                logger.warning("Could not extract kinematic signature from geometry cache: %s", e)
+
         cap = cv2.VideoCapture(resolved_path)
         if not cap.isOpened():
             logger.error("Could not open video: %s", video_path)
