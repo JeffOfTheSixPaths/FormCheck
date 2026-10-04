@@ -5,6 +5,7 @@ HOW TO HAND-EDIT THE UI, COLOR SCHEME & TECH FONTS:
 ================================================================================
 1. QUICK PRESET SWITCH (1 Variable):
    Set `ACTIVE_PRESET` below to one of:
+   - "ATHLETIC_MONO"    (Black & white minimalist with pastel mint/cyan/coral accents)
    - "MIDNIGHT_BLUE"    (Deep navy blue & vibrant cyan/electric blue)
    - "DARK_MODERN"      (Default sleek GitHub/Obsidian dark theme)
    - "EMERALD_GYM"      (High-contrast fitness theme with vivid neon green)
@@ -29,9 +30,25 @@ from typing import Dict, Any
 # ==============================================================================
 # 1. THEME PRESETS (Pick a preset OR choose "CUSTOM" to use the variables below)
 # ==============================================================================
-ACTIVE_PRESET = "MIDNIGHT_BLUE"  # Options: "MIDNIGHT_BLUE", "DARK_MODERN", "EMERALD_GYM", "CYBERPUNK_PURPLE", "SLATE_MINIMAL", "CUSTOM"
+ACTIVE_PRESET = "ATHLETIC_MONO"  # Options: "ATHLETIC_MONO", "MIDNIGHT_BLUE", "DARK_MODERN", "EMERALD_GYM", "CYBERPUNK_PURPLE", "SLATE_MINIMAL", "CUSTOM"
 
 PRESETS: Dict[str, Dict[str, str]] = {
+    "ATHLETIC_MONO": {
+        "PRIMARY_COLOR": "#a5f3fc",        # Pastel ice cyan (Clean athletic accent)
+        "BG_BASE": "#09090b",              # Matte black carbon canvas
+        "BG_SURFACE": "#141416",           # Deep dark card & panel surface
+        "BG_INPUT": "#1c1c20",             # Elevated element & control surface
+        "BORDER_COLOR": "#323238",         # Crisp, minimalist solid outline for all boxes
+        "BORDER_LIGHT": "#52525c",         # Subtle highlight edge
+        "BORDER_DARK": "#18181b",          # Shadow edge
+        "TEXT_PRIMARY": "#ffffff",         # Clean chalk white text
+        "TEXT_MUTED": "#9ca3af",           # Athletic neutral grey
+        "COLOR_SUCCESS": "#059669",        # Start training button base
+        "COLOR_SUCCESS_BRIGHT": "#86efac", # Pastel mint (Clean reps & 100% score)
+        "COLOR_WARNING": "#fde047",        # Pastel gold (Paused / caution)
+        "COLOR_DANGER": "#e11d48",         # Stop training button base
+        "COLOR_DANGER_BRIGHT": "#fca5a5",  # Pastel coral / rose (Form breaks)
+    },
     "MIDNIGHT_BLUE": {
         "PRIMARY_COLOR": "#38bdf8",        # Electric sky blue
         "BG_BASE": "#0a0f1d",              # Deep navy night canvas
@@ -117,22 +134,22 @@ PRESETS: Dict[str, Dict[str, str]] = {
 # ==============================================================================
 # 2. CUSTOM COLOR SCHEME (Used if ACTIVE_PRESET = "CUSTOM", or tweak directly)
 # ==============================================================================
-CUSTOM_PRIMARY_COLOR       = "#38bdf8"  # Accent / Highlights / Active Tabs
-CUSTOM_BG_BASE             = "#0a0f1d"  # Application Window Background
-CUSTOM_BG_SURFACE          = "#0f172a"  # Cards, Boxes, Panels Background
-CUSTOM_BG_INPUT            = "#1e293b"  # Input Fields, Dropdowns, Idle Badges
-CUSTOM_BORDER_COLOR        = "#415e87"  # Complete 4-sided Box & Card Outlines
-CUSTOM_BORDER_LIGHT        = "#60a5fa"  # Highlight Edge
-CUSTOM_BORDER_DARK         = "#1e293b"  # Shadow Edge
-CUSTOM_TEXT_PRIMARY        = "#f8fafc"  # Primary Text
-CUSTOM_TEXT_MUTED          = "#94a3b8"  # Secondary / Subtitle Text
+CUSTOM_PRIMARY_COLOR       = "#a5f3fc"  # Pastel Ice Cyan (Accent / Active Tabs)
+CUSTOM_BG_BASE             = "#09090b"  # Matte Black Carbon Canvas
+CUSTOM_BG_SURFACE          = "#141416"  # Deep Dark Box & Card Surface
+CUSTOM_BG_INPUT            = "#1c1c20"  # Elevated Element Surface
+CUSTOM_BORDER_COLOR        = "#323238"  # Crisp Minimalist Outlines
+CUSTOM_BORDER_LIGHT        = "#52525c"  # Highlight Edge
+CUSTOM_BORDER_DARK         = "#18181b"  # Shadow Edge
+CUSTOM_TEXT_PRIMARY        = "#ffffff"  # Crisp Chalk White Text
+CUSTOM_TEXT_MUTED          = "#9ca3af"  # Athletic Neutral Grey
 
-# Status & Button Accents
-CUSTOM_COLOR_SUCCESS       = "#059669"  # Start Button
-CUSTOM_COLOR_SUCCESS_BRIGHT= "#10b981"  # Clean Reps & 100% Score
-CUSTOM_COLOR_WARNING       = "#d97706"  # Pause Button & Medium Score
-CUSTOM_COLOR_DANGER        = "#dc2626"  # Stop Button
-CUSTOM_COLOR_DANGER_BRIGHT = "#ef4444"  # Flawed Reps & Low Score
+# Status & Button Accents (Pastels)
+CUSTOM_COLOR_SUCCESS       = "#059669"  # Start Drill Button Base
+CUSTOM_COLOR_SUCCESS_BRIGHT= "#86efac"  # Pastel Mint (Clean Reps & 100% Score)
+CUSTOM_COLOR_WARNING       = "#fde047"  # Pastel Gold (Pause & Caution)
+CUSTOM_COLOR_DANGER        = "#e11d48"  # Stop Drill Button Base
+CUSTOM_COLOR_DANGER_BRIGHT = "#fca5a5"  # Pastel Coral / Soft Rose (Form Breaks)
 
 # ==============================================================================
 # 3. UI GEOMETRY & SHARPNESS CONFIGURATION
@@ -184,6 +201,7 @@ class UITheme:
     font_family: str = FONT_FAMILY
     font_family_display: str = FONT_FAMILY_DISPLAY
     font_family_tech: str = FONT_FAMILY_TECH
+    font_family_body: str = FONT_FAMILY_BODY
     font_size_base: str = FONT_SIZE_BASE
 
     # Property aliases for uppercase access
@@ -206,6 +224,8 @@ class UITheme:
     @property
     def TEXT_MUTED(self) -> str: return self.text_muted
     @property
+    def TEXT_SECONDARY(self) -> str: return self.text_muted
+    @property
     def COLOR_SUCCESS(self) -> str: return self.color_success
     @property
     def COLOR_SUCCESS_BRIGHT(self) -> str: return self.color_success_bright
@@ -227,6 +247,8 @@ class UITheme:
     def FONT_FAMILY_DISPLAY(self) -> str: return self.font_family_display
     @property
     def FONT_FAMILY_TECH(self) -> str: return self.font_family_tech
+    @property
+    def FONT_FAMILY_BODY(self) -> str: return self.font_family_body
 
 
 def load_application_fonts() -> None:
@@ -302,6 +324,10 @@ QWidget {{
     letter-spacing: 0.5px;
 }}
 
+QLabel {{
+    background-color: transparent;
+}}
+
 /* ==========================================================================
    Group Boxes / Containers (Continuous 4-sided Outlines)
    ========================================================================== */
@@ -309,8 +335,8 @@ QGroupBox {{
     background-color: {theme.bg_surface};
     border: 1px solid {theme.border_color};
     border-radius: {theme.border_radius};
-    margin-top: 24px;
-    padding: 16px 12px 12px 12px;
+    margin-top: 14px;
+    padding: 22px 16px 16px 16px;
     font-family: {theme.font_family_display};
     font-weight: 700;
     letter-spacing: 1.5px;
@@ -320,17 +346,17 @@ QGroupBox {{
 QGroupBox::title {{
     subcontrol-origin: margin;
     subcontrol-position: top left;
-    padding: 2px 10px;
-    left: 12px;
-    top: 2px;
+    padding: 3px 12px;
+    left: 14px;
+    top: -1px;
     background-color: {theme.bg_input};
     border: 1px solid {theme.border_color};
     border-radius: {theme.border_radius_sm};
     color: {theme.primary_color};
     font-family: {theme.font_family_display};
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
 }}
 
 /* ==========================================================================
@@ -340,10 +366,11 @@ QComboBox {{
     background-color: {theme.bg_input};
     border: 1px solid {theme.border_color};
     border-radius: {theme.border_radius};
-    padding: 8px 12px;
-    min-height: 28px;
+    padding: 8px 14px;
+    min-height: 42px;
     color: {theme.text_primary};
     font-family: {theme.font_family};
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.8px;
 }}
@@ -359,7 +386,13 @@ QComboBox:focus {{
 
 QComboBox::drop-down {{
     border: none;
-    width: 24px;
+    width: 32px;
+}}
+
+QComboBox:disabled {{
+    background-color: {theme.bg_surface};
+    border: 1px solid {theme.border_dark};
+    color: {theme.text_muted};
 }}
 
 QComboBox QAbstractItemView {{
@@ -367,9 +400,9 @@ QComboBox QAbstractItemView {{
     border: 1px solid {theme.border_color};
     border-radius: {theme.border_radius_sm};
     selection-background-color: {theme.primary_color};
-    selection-color: #ffffff;
+    selection-color: #000000;
     color: {theme.text_primary};
-    padding: 4px;
+    padding: 8px;
     outline: none;
     font-family: {theme.font_family};
 }}
@@ -381,12 +414,12 @@ QPushButton {{
     background-color: {theme.bg_input};
     border: 1px solid {theme.border_color};
     border-radius: {theme.border_radius};
-    padding: 8px 16px;
-    min-height: 28px;
+    padding: 8px 14px;
+    min-height: 40px;
     color: {theme.text_primary};
     font-family: {theme.font_family_display};
     font-weight: 700;
-    letter-spacing: 1.2px;
+    letter-spacing: 1px;
 }}
 
 QPushButton:hover {{
@@ -411,15 +444,19 @@ QPushButton#btn_start {{
     background-color: {theme.color_success};
     border: 1px solid {theme.color_success_bright};
     color: #ffffff;
-    font-size: 14px;
-    font-weight: bold;
+    font-family: {theme.font_family_display};
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
     border-radius: {theme.border_radius};
-    min-height: 28px;
+    min-height: 52px;
+    padding: 10px 16px;
 }}
 
 QPushButton#btn_start:hover {{
     background-color: {theme.color_success_bright};
     border: 1px solid #ffffff;
+    color: #09090b;
 }}
 
 QPushButton#btn_start:pressed {{
@@ -430,18 +467,25 @@ QPushButton#btn_start:pressed {{
 /* Pause Button */
 QPushButton#btn_pause {{
     background-color: {theme.color_warning};
-    border: 1px solid #fbbf24;
-    color: #ffffff;
-    font-weight: 600;
+    border: 1px solid #fef08a;
+    color: #09090b;
+    font-family: {theme.font_family_display};
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
     border-radius: {theme.border_radius};
+    min-height: 42px;
+    padding: 6px 10px;
 }}
 
 QPushButton#btn_pause:hover {{
     border: 1px solid #ffffff;
+    background-color: #fef08a;
 }}
 
 QPushButton#btn_pause:pressed {{
-    background-color: #78350f;
+    background-color: #854d0e;
+    color: #ffffff;
 }}
 
 /* Stop Button */
@@ -449,16 +493,31 @@ QPushButton#btn_stop {{
     background-color: {theme.color_danger};
     border: 1px solid {theme.color_danger_bright};
     color: #ffffff;
-    font-weight: 600;
+    font-family: {theme.font_family_display};
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
     border-radius: {theme.border_radius};
+    min-height: 42px;
+    padding: 6px 10px;
 }}
 
 QPushButton#btn_stop:hover {{
     border: 1px solid #ffffff;
+    background-color: {theme.color_danger_bright};
+    color: #09090b;
 }}
 
 QPushButton#btn_stop:pressed {{
-    background-color: #7f1d1d;
+    background-color: #881337;
+}}
+
+QPushButton#btn_start:disabled,
+QPushButton#btn_pause:disabled,
+QPushButton#btn_stop:disabled {{
+    background-color: {theme.bg_surface};
+    border: 1px solid {theme.border_dark};
+    color: {theme.text_muted};
 }}
 
 /* Reset Button */
@@ -466,7 +525,13 @@ QPushButton#btn_reset {{
     background-color: {theme.bg_input};
     border: 1px solid {theme.border_color};
     color: {theme.text_muted};
+    font-family: {theme.font_family_display};
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
     border-radius: {theme.border_radius};
+    min-height: 40px;
+    padding: 8px 14px;
 }}
 
 QPushButton#btn_reset:hover {{
@@ -480,17 +545,18 @@ QPushButton#btn_primary {{
     border: 1px solid {theme.color_success_bright};
     color: #ffffff;
     font-family: {theme.font_family_display};
-    font-size: 14px;
-    letter-spacing: 1.5px;
-    padding: 10px 20px;
+    font-size: 15px;
+    letter-spacing: 2px;
+    padding: 12px 24px;
     border-radius: {theme.border_radius};
     font-weight: 800;
-    min-height: 24px;
+    min-height: 48px;
 }}
 
 QPushButton#btn_primary:hover {{
     background-color: {theme.color_success_bright};
     border: 1px solid #ffffff;
+    color: #09090b;
 }}
 
 QPushButton#btn_primary:pressed {{
@@ -502,7 +568,7 @@ QPushButton#btn_link {{
     border: none;
     color: {theme.primary_color};
     text-decoration: underline;
-    padding: 6px;
+    padding: 10px;
     font-family: {theme.font_family_tech};
     font-size: 13px;
     font-weight: 600;
@@ -510,7 +576,7 @@ QPushButton#btn_link {{
 }}
 
 QPushButton#btn_link:hover {{
-    color: {theme.border_light};
+    color: #ffffff;
 }}
 
 /* ==========================================================================
@@ -535,10 +601,10 @@ QStatusBar {{
     background-color: {theme.bg_surface};
     color: {theme.text_muted};
     border-top: 1px solid {theme.border_color};
-    padding: 4px;
+    padding: 6px;
     font-family: {theme.font_family_tech};
     font-size: 12px;
-    letter-spacing: 0.8px;
+    letter-spacing: 1px;
 }}
 
 /* ==========================================================================
@@ -548,13 +614,14 @@ QLineEdit {{
     background-color: {theme.bg_surface};
     border: 1px solid {theme.border_color};
     border-radius: {theme.border_radius};
-    padding: 8px 12px;
-    min-height: 28px;
+    padding: 10px 16px;
+    min-height: 42px;
     color: {theme.text_primary};
     font-family: {theme.font_family};
-    font-size: 13px;
+    font-size: 14px;
     letter-spacing: 0.5px;
     selection-background-color: {theme.primary_color};
+    selection-color: #000000;
 }}
 
 QLineEdit:hover {{
@@ -589,12 +656,12 @@ QTabBar::tab {{
     border-bottom: none;
     border-top-left-radius: {theme.border_radius};
     border-top-right-radius: {theme.border_radius};
-    padding: 8px 20px;
-    margin-right: 4px;
+    padding: 12px 26px;
+    margin-right: 6px;
     font-family: {theme.font_family_display};
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
 }}
 
 QTabBar::tab:selected {{
